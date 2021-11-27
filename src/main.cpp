@@ -1,6 +1,10 @@
 #include "WeightLayer.h"
+#include <iostream>
 
 
-void main() {
+int main() {
+    std::cout << "Lol, done!" << std::endl;
+    return 0;
+
 
 }

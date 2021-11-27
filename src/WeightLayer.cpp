@@ -2,13 +2,15 @@
 #include <vector>
 
 
-WeightLayer::WeightLayer(const std::vector<std::vector<F>>& weight_matrix,
-                         std::vector<F>&& b) : bias(std::move(b)) {
+template<typename F>
+WeightLayer<F>::WeightLayer(const std::vector<std::vector<F>>& weight_matrix,
+                         std::vector<F>&& b) : biases(std::move(b)) {
     init_weights(weight_matrix);
 }
 
 
-void WeightLayer::init_weights(const std::vector<std::vector<F>>& weight_matrix)  {
+template<typename F>
+void WeightLayer<F>::init_weights(const std::vector<std::vector<F>>& weight_matrix)  {
     for (const std::vector<F>& row : weight_matrix) {
         std::vector<F> new_row(row.size());
         for (size_t i = 0; i < row.size(); ++i) {
@@ -18,9 +20,9 @@ void WeightLayer::init_weights(const std::vector<std::vector<F>>& weight_matrix)
     }
 }
 
-
-std::vector<std::vector<F>> static WeightLayer::get_transposed_weights(
-        const std::vector<std::vector<F>>& weight_matrix) const {
+template<typename F>
+std::vector<std::vector<F>> WeightLayer<F>::get_transposed_weights(
+        const std::vector<std::vector<F>>& weight_matrix) {
     if (weight_matrix.empty()) {
         return std::vector<std::vector<F>>();
     }
@@ -30,7 +32,7 @@ std::vector<std::vector<F>> static WeightLayer::get_transposed_weights(
 
     #pragma omp parallel for
     for (size_t j = 0; j < weight_matrix.size(); ++j) {
-        std::vector<T> new_row(weight_matrix.size());
+        std::vector<F> new_row(weight_matrix.size());
         for (size_t i = 0; i < col_len; ++i) {
             new_row[i] = weight_matrix[j][i];
         }
@@ -41,10 +43,10 @@ std::vector<std::vector<F>> static WeightLayer::get_transposed_weights(
 }
 
 
-template<typename F = float>
-static std::vector<F> WeightLayer::compute_inner_potential(const std::vector<std::vector<F>>& weights,
+template<typename F>
+std::vector<F> WeightLayer<F>::compute_inner_potential(const std::vector<std::vector<F>>& weights,
                                                            const std::vector<F>& input_values,
-                                                           const std::vector<F>& biases) const {
+                                                           const std::vector<F>& biases) {
     if (weights.empty() || input_values.size() != weights[0].size() || biases.size() != weights.size()) {
         return std::vector<F>(); // throw??
     }
@@ -54,7 +56,7 @@ static std::vector<F> WeightLayer::compute_inner_potential(const std::vector<std
         for (size_t j = 0; j < weights.size(); ++j) {
             result[i] += weights[i][j] * input_values[j];
         }
-        result[i] += bias[i];
+        result[i] += biases[i];
     }
 
     return result;

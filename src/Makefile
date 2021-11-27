@@ -1,18 +1,28 @@
 TARGETS = main
 HEADERS = WeightLayer.h
 BIN = main
-CXXFLAGS  = -Wall -Werror -Wextra -pedantic -ansi -std=c++14
+CXXFLAGS = -fopenmp -Wall -Wextra  -std=c++17
 CC= g++
+OBJS = WeightLayer.o
 
 all: $(TARGETS)
 
-main.o: $(HEADERS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+main: main.o WeightLayer.o
+	$(CC) $(CXXFLAGS) -o main main.o WeightLayer.o
+#main: main.o $(OBJS)
+#	$(CC) $(CXXFLAGS) $^ -o $@
 
-%.o: %.c %.h
-	$(CC) $(CXXFLAGS) $(CFLAGS) -c $< -o $@
+main.o: main.cpp $(HEADERS)
+	$(CC) $(CXXFLAGS) -o $@ -c $<
+
+%.o: %.cpp %.h
+	$(CC) $(CXXFLAGS) -c $< -o $@
 
 
 clean:
-	rm -f *.o
-	rm $(BIN)
+	-$(RM) $(OBJS) main.o
+
+distclean: clean
+	-$(RM) $(OBJS) $(TARGETS)
+
+.PHONY: clean distclean

@@ -44,7 +44,7 @@ T& InputIterator<T>::operator*() {
 
 template<typename T>
 bool InputIterator<T>::is_last() const {
-    return input_file.eof() && current_item_it == current_batch.end()--;
+    return input_file.eof() && current_item_it == --current_batch.end();
 }
 
 

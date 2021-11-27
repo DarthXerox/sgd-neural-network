@@ -6,7 +6,6 @@
 template<typename F = float>
 struct WeightLayer {
     WeightLayer(const std::vector<std::vector<F>>& weight_matrix, std::vector<F>&& b);
-
     void init_weights(const std::vector<std::vector<F>>& weight_matrix);
 
     static std::vector<std::vector<F>> get_transposed_weights(const std::vector<std::vector<F>>& weight_matrix);

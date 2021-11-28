@@ -8,14 +8,16 @@ InputIterator<T>::InputIterator(std::string filename, size_t batch_size)
 : input_file(filename), batch_size(batch_size) {}
 
 
-TrainingInputIterator::TrainingInputIterator(std::string filename, size_t batch_size)
-: InputIterator<std::vector<int>>(filename, batch_size) {
+template<typename F>
+ImageInputIterator<F>::ImageInputIterator(std::string filename, size_t batch_size)
+: InputIterator<std::vector<F>>(filename, batch_size) {
     load_new_batch();
 }
 
 
-TestInputIterator::TestInputIterator(std::string filename, size_t batch_size)
-: InputIterator<int>(filename, batch_size) {
+template<typename F>
+TestInputIterator<F>::TestInputIterator(std::string filename, size_t batch_size)
+: InputIterator<F>(filename, batch_size) {
     load_new_batch();
 }
 
@@ -41,6 +43,11 @@ T& InputIterator<T>::operator*() {
     return *current_item_it;
 }
 
+//template<typename T>
+//T* InputIterator<T>::operator->() {
+//    return &*current_item_it;
+//}
+
 
 template<typename T>
 bool InputIterator<T>::is_last() const {
@@ -48,11 +55,12 @@ bool InputIterator<T>::is_last() const {
 }
 
 
-void TrainingInputIterator::load_new_batch() {
-    current_batch.clear();
-    for (size_t i = 0; i < this.batch_size && input_file.eof(); ++i) {
-        std::vector<int> current_input;
-        int val;
+template<typename F>
+void ImageInputIterator<F>::load_new_batch() {
+    this->current_batch.clear();
+    for (size_t i = 0; i < this->batch_size && !input_file.eof(); ++i) {
+        std::vector<F> current_input;
+        F val;
         char colon;
         do {
             input_file >> val >> colon;
@@ -65,37 +73,38 @@ void TrainingInputIterator::load_new_batch() {
 }
 
 
-void TestInputIterator::load_new_batch() {
-    current_batch.clear();
-    for (size_t i = 0; i < this.batch_size && input_file.eof(); ++i) {
-        int val;
+template<typename F>
+void TestInputIterator<F>::load_new_batch() {
+    this->current_batch.clear();
+    for (size_t i = 0; i < this.batch_size && !input_file.eof(); ++i) {
+        F val;
         char colon;
-        do {
-            input_file >> val >> colon;
-            current_batch.push_back(val);
-        }
-        while (colon == ',');
+        input_file >> val >> colon;
+        current_batch.push_back(val);
     }
     current_item_it = current_batch.begin();
 }
 
 
-size_t TrainingInputIterator::get_input_count() const {
+template<typename F>
+size_t ImageInputIterator<F>::get_input_count() const {
     return current_batch.front().size();
 }
 
-template<typename T, template<typename> class Iterator>
-Iterator<T> get_first_input(const std::string& filename, size_t batch_size) {
-    return Iterator<T>(filename, batch_size);
-}
-
-
-TrainingInputIterator get_first_training_input(const std::string& filename, size_t batch_size) {
-    return get_first_input<std::vector<int>, TrainingInputIterator>(filename, batch_size);
-}
-
-
-TestInputIterator get_first_test_input(const std::string& filename, size_t batch_size) {
-    return get_first_input<TestInputIterator>(filename, batch_size);
-}
+//template<typename T, template<typename> class Iterator>
+//Iterator<T> get_first_input(const std::string& filename, size_t batch_size) {
+//    return Iterator<T>::Iterator(filename, batch_size);
+//}
+//
+//
+//template<typename F>
+//ImageInputIterator<F> get_first_training_input(const std::string& filename, size_t batch_size) {
+//    return get_first_input<std::vector<F>, ImageInputIterator>(filename, batch_size);
+//}
+//
+//
+//template<typename F>
+//TestInputIterator<F> get_first_test_input(const std::string& filename, size_t batch_size) {
+//    return get_first_input<F, TestInputIterator>(filename, batch_size);
+//}
 

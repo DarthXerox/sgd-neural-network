@@ -1,7 +1,3 @@
-//
-// Created by xeroX on 11/27/21.
-//
-
 #ifndef PV021_PROJECT_NEURONLAYER_H
 #define PV021_PROJECT_NEURONLAYER_H
 

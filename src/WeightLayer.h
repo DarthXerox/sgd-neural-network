@@ -27,6 +27,8 @@ struct WeightLayer {
             bias -= F(1);
             bias *= weight_range;
         }
+
+        transposed_weights = get_transposed_weights(weights);
     }
     
     void correct_weights(const std::vector<std::vector<F>>& errors) {
@@ -35,6 +37,8 @@ struct WeightLayer {
                 weights[i][j] += errors[i][j];
             }
         }
+
+        transposed_weights = get_transposed_weights(weights);
     }
 
 
@@ -43,6 +47,10 @@ struct WeightLayer {
 
     static std::vector<std::vector<F>> get_transposed_weights(const std::vector<std::vector<F>>& weight_matrix);
 
+    
+    std::vector<F> compute_inner_potential(const std::vector<F>& input_values) {
+        return WeightLayer<F>::compute_inner_potential(transposed_weights, input_values, biases);
+    }
     /**
      * This could be insitu if necessary
      * @param weights must be transposed
@@ -61,6 +69,8 @@ struct WeightLayer {
 
 private:
     std::vector<std::vector<F>> weights;
+    std::vector<std::vector<F>> transposed_weights;
+
     std::vector<F> biases; // for the upper layer
 
 };

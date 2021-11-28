@@ -10,7 +10,7 @@ template<typename F = float> struct InputManager;
 template<typename F = float>
 struct Image {
     friend class InputManager<F>;
-    const std::vector<F>& get_pixels() {
+    const std::vector<F>& get_pixels() const {
         return pixels;
     }
 
@@ -85,8 +85,16 @@ struct InputManager {
         }
     }
 
-    std::vector<Image<F>>& get_images() {
+    const std::vector<Image<F>>& get_images() {
         return training_data;
+    }
+
+    size_t get_training_input_count() const {
+        return training_data.size();
+    }
+
+    size_t get_pixel_per_image_count() const {
+        return training_data.front().get_pixels().size();
     }
 
 private:

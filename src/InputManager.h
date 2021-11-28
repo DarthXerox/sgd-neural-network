@@ -4,8 +4,17 @@
 #include <vector>
 #include <fstream>
 
+
+template<typename F = float> struct InputManager;
+
 template<typename F = float>
 struct Image {
+    friend class InputManager<F>;
+    const std::vector<F>& get_pixels() {
+        return pixels;
+    }
+
+private:
     std::vector<F> pixels;
     //F value_predicted;
     F actual_value; // label

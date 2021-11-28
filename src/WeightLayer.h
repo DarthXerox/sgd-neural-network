@@ -1,12 +1,45 @@
 #ifndef PV021_PROJECT_WEIGHTLAYER_H
 #define PV021_PROJECT_WEIGHTLAYER_H
 
+#define SEED 42 // 0 and 42????
+
 #include <vector>
+#include <cstdlib>
 
 template<typename F = float>
 struct WeightLayer {
-    WeightLayer(const std::vector<std::vector<F>>& weight_matrix, std::vector<F>&& b);
-    void init_weights(const std::vector<std::vector<F>>& weight_matrix);
+    WeightLayer(float weight_range, int lower_size, int upper_size) {
+        weights = std::vector<std::vector<F>>(lower_size);
+
+        srand(SEED);
+        //srand(time(NULL));
+        for (std::vector<F>& lower_neuron_weights : weights) {
+            lower_neuron_weights = std::vector<F>(upper_size);
+            for (F& weight : lower_neuron_weights) {
+                F weight = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
+                weight -= F(1);
+                weight *= weight_range;
+            }
+        }
+        biases = std::vector<F>(upper_size); 
+        for (F& bias : biases) {
+            F bias = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
+            bias -= F(1);
+            bias *= weight_range;
+        }
+    }
+    
+    void correct_weights(const std::vector<std::vector<F>>& errors) {
+        for (size_t i = 0; i < weights.size(); ++i) {
+            for (size_t j = 0; j < weights.front().size(); ++j) {
+                weights[i][j] += errors[i][j];
+            }
+        }
+    }
+
+
+    //WeightLayer(const std::vector<std::vector<F>>& weight_matrix, std::vector<F>&& biases);
+    //void init_weights(const std::vector<std::vector<F>>& weight_matrix);
 
     static std::vector<std::vector<F>> get_transposed_weights(const std::vector<std::vector<F>>& weight_matrix);
 

@@ -1,5 +1,5 @@
 TARGETS = main
-HEADERS = WeightLayer.h
+HEADERS = WeightLayer.h ActivationFunction.h InputManager.h NeuralNetwork.h
 BIN = main
 CXXFLAGS = -fopenmp -Wall -Wextra  -std=c++17
 CC= g++
@@ -17,7 +17,6 @@ main.o: main.cpp $(HEADERS)
 
 %.o: %.cpp %.h
 	$(CC) $(CXXFLAGS) -c $< -o $@
-
 
 clean:
 	-$(RM) $(OBJS) main.o

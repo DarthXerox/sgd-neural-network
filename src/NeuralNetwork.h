@@ -1,7 +1,7 @@
 #ifndef PV021_PROJECT_NEURALNETWORK_H
 #define PV021_PROJECT_NEURALNETWORK_H
 
-#include "NeuronLayer.h"
+
 #include "InputManager.h"
 #include "ActivationFunction.h"
 #include "WeightLayer.h"
@@ -12,7 +12,6 @@
 
 template<typename F = float>
 struct NeuralNetwork {
-    // TODO
     NeuralNetwork(const std::string& training_file, const std::string& training_labels, size_t batch_size,
                   std::vector<size_t> layer_sizes, std::vector<ActivationFunction<F>> functions)
     : input_manager(training_file, training_labels), batch_size(batch_size), 
@@ -36,6 +35,7 @@ struct NeuralNetwork {
             layers.push_back(WeightLayer<F>(weight_range, lower_layer_size, upper_layer_size));
             lower_layer_size = upper_layer_size;
         }
+
     }
 
     std::vector<F> activate(const Image<F>& input) const {
@@ -63,7 +63,7 @@ private:
     std::vector<F>& sum_two_vectors(std::vector<F>& fst, const std::vector<F>& snd) {
         assert(fst.size() == snd.size());
         for (size_t i = 0; i < fst.size(); ++i) {
-            fst[i] += snd[i]
+            fst[i] += snd[i];
         }
         return fst;
     }

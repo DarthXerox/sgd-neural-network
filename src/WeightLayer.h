@@ -16,14 +16,14 @@ struct WeightLayer {
         for (std::vector<F>& lower_neuron_weights : weights) {
             lower_neuron_weights = std::vector<F>(upper_size);
             for (F& weight : lower_neuron_weights) {
-                F weight = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
+                weight = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
                 weight -= F(1);
                 weight *= weight_range;
             }
         }
         biases = std::vector<F>(upper_size); 
         for (F& bias : biases) {
-            F bias = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
+            bias = F(2) * (static_cast <F> (rand()) / static_cast <F> (RAND_MAX));
             bias -= F(1);
             bias *= weight_range;
         }

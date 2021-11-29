@@ -1,7 +1,7 @@
 #include "WeightLayer.h"
 #include <vector>
 
-
+/*
 template<typename F>
 WeightLayer<F>::WeightLayer(const std::vector<std::vector<F>>& weight_matrix,
                          std::vector<F>&& b) : biases(std::move(b)) {
@@ -19,6 +19,7 @@ void WeightLayer<F>::init_weights(const std::vector<std::vector<F>>& weight_matr
         weights.push_back(new_row);
     }
 }
+*/
 
 template<typename F>
 std::vector<std::vector<F>> WeightLayer<F>::get_transposed_weights(

@@ -7,7 +7,7 @@
 
 template<typename TIn, typename TOut>
 struct Function {
-    virtual static TOut compute(TIn x) = 0;
+    virtual TOut compute(TIn x) = 0;
     //virtual static TOut compute_derivative(TIn x) = 0;
 };
 

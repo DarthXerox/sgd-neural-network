@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <cassert>
+#include <cmath>
 
 template<typename F = float>
 struct NeuralNetwork {
@@ -17,10 +18,27 @@ struct NeuralNetwork {
     : input_manager(training_file, training_labels), batch_size(batch_size), 
       layer_sizes(layer_sizes), activation_functions(functions) {
         input_layer_size = input_manager.get_training_input_count();
-        // teraz urob weightlayers podla layer_sizes a podla functions urci weight_range
+        assert(layer_sizes.size() > 1);
+
+        size_t lower_layer_size = input_layer_size;
+        for (size_t i = 0; i <= layer_sizes.size(); ++i) {
+            size_t upper_layer_size = layer_sizes[i];
+            float weight_range = 0;
+
+            switch (functions[i].function_type) {
+                case FunctionType::Relu:
+                    weight_range = std::sqrt(6 / (lower_layer_size));
+                    break;
+                case FunctionType::Softmax:
+                    weight_range = std::sqrt(6 / (lower_layer_size + upper_layer_size));
+                    break;
+            }
+            layers.push_back(WeightLayer<F>(weight_range, lower_layer_size, upper_layer_size));
+            lower_layer_size = upper_layer_size;
+        }
     }
 
-    std::vector<F> activate(const Image<F>& input) {
+    std::vector<F> activate(const Image<F>& input) const {
         std::vector<F> layer_inputs = input.get_pixels();
         assert(layer_inputs.size() == input_layer_size);
 
@@ -28,6 +46,8 @@ struct NeuralNetwork {
             layer_inputs = layers[i].compute_inner_potential(layer_inputs);
             activation_functions[i].compute(layer_inputs);
         }
+
+        return layer_inputs;
     }
 
     void train() {

@@ -60,11 +60,11 @@ struct WeightLayer {
                                                   const std::vector<F>& biases);
 
     size_t get_upper_layer_len() const {
-        return biases.size();
+        return transposed_weights.size();
     }
 
     size_t get_lower_layer_len() const {
-        return weights[0].size();
+        return weights.size();
     }
 
 private:

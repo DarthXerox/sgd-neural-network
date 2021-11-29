@@ -67,6 +67,10 @@ struct WeightLayer {
         return weights.size();
     }
 
+    void set_weights(const std::vector<std::vector<F>>& w) {
+        this->weights = w;
+    }
+
 private:
     std::vector<std::vector<F>> weights;
     std::vector<std::vector<F>> transposed_weights;

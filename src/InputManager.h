@@ -18,7 +18,7 @@ struct Image {
 private:
     std::vector<F> pixels;
     //F value_predicted;
-    F actual_value; // label
+    F label; // label
 };
 
 
@@ -38,11 +38,14 @@ struct InputManager {
     void read_labels(const std::string& filename) {
         std::ifstream labels(filename);
         size_t i = 0;
-        char new_line;
-
-        while (!labels.eof() && i < training_data.size()) {
-            labels >> training_data[i].actual_value >> new_line;
-            ++i;
+        for(std::string line; std::getline(labels, line);) {
+            std::istringstream str(line);
+            char colon;
+            do {
+                str >> training_data[i].label;
+                ++i;
+            }
+            while (str >> colon);
         }
     }
 

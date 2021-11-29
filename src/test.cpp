@@ -1,8 +1,9 @@
+
 #define CATCH_CONFIG_MAIN
 
-#include "../catch.hpp"
-
+#include "catch.hpp"
 #include "WeightLayer.h"
+
 #include <cassert>
 
 
@@ -12,7 +13,9 @@ TEST_CASE("Transpose matrix"){
                                          { 6, 7, 8, 9, 10 },
                                          { 11, 12, 13, 14, 15 },
                                          { 16, 17, 18, 19, 20 }};
-    WeightLayer<float> layer = new WeightLayer<float>(weights);
+    REQUIRE(weights[0][0] == weights[0][0]);
+    WeightLayer<float> layer = WeightLayer<float>(4, weights.size(), weights.front().size());
+    layer.set_weights(weights);
 
     std::vector<std::vector<float>> should_be
                                         {{ 1, 6, 11, 16 },
@@ -22,7 +25,5 @@ TEST_CASE("Transpose matrix"){
                                         { 5,10,15,20 }};
 
     REQUIRE(layer.get_transposed_weights(weights) == should_be);
-
-}
 
 }

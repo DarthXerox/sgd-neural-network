@@ -38,7 +38,7 @@ struct NeuralNetwork {
 
     }
 
-    std::vector<F> activate(const Image<F>& input) const {
+    std::vector<F> forward_propagation(const Image<F>& input) const {
         std::vector<F> layer_inputs = input.get_pixels();
         assert(layer_inputs.size() == input_layer_size);
 

@@ -12,15 +12,12 @@ add_executable(pv021_project
         src/InputManager.h
         src/NeuralNetwork.h
         #src/test.cpp
-        src/WeightLayer.cpp
         src/WeightLayer.h)
 
 add_executable(tests
         src/test.cpp
-        src/catch_main.cpp
         src/ActivationFunction.h
         src/catch.hpp
         src/InputManager.h
         src/NeuralNetwork.h
-        src/WeightLayer.cpp
         src/WeightLayer.h)

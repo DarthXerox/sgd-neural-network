@@ -38,26 +38,53 @@ struct WeightLayer {
             }
         }
 
-        transposed_weights = get_transposed_weights(weights);
+        transposed_weights = WeightLayer<F>::get_transposed_weights(weights);
     }
 
 
     //WeightLayer(const std::vector<std::vector<F>>& weight_matrix, std::vector<F>&& biases);
     //void init_weights(const std::vector<std::vector<F>>& weight_matrix);
 
-    static std::vector<std::vector<F>> get_transposed_weights(const std::vector<std::vector<F>>& weight_matrix);
+    std::vector<std::vector<F>> get_transposed_weights(std::vector<std::vector<F>>& weight_matrix){
+        if (weight_matrix.empty()) {
+            return std::vector<std::vector<F>>();
+        }
 
-    
-    std::vector<F> compute_inner_potential(const std::vector<F>& input_values) {
-        return WeightLayer<F>::compute_inner_potential(transposed_weights, input_values, biases);
+        size_t col_len = weight_matrix[0].size();
+        std::vector<std::vector<F>> result(col_len);
+
+//        #pragma omp parallel for
+        for (size_t j = 0; j < col_len; ++j) {
+            std::vector<F> new_row(weight_matrix.size());
+            for (size_t i = 0; i < weight_matrix.size(); ++i) {
+                new_row[i] = weight_matrix[i][j];
+            }
+            result[j] = new_row;
+        }
+
+        return result;
     }
+
+
     /**
      * This could be insitu if necessary
      * @param weights must be transposed
      */
-    static std::vector<F> compute_inner_potential(const std::vector<std::vector<F>>& weights,
-                                                  const std::vector<F>& input_values,
-                                                  const std::vector<F>& biases);
+    std::vector<F> compute_inner_potential(const std::vector<F>& input_values){
+        if (weights.empty() || input_values.size() != weights[0].size() || biases.size() != weights.size()) {
+            return std::vector<F>(); // throw??
+        }
+
+        std::vector<F> result(weights.size());
+        for (size_t i = 0; i < input_values; ++i) {
+            for (size_t j = 0; j < weights.size(); ++j) {
+                result[i] += weights[i][j] * input_values[j];
+            }
+            result[i] += biases[i];
+        }
+
+        return result;
+    }
 
     size_t get_upper_layer_len() const {
         return transposed_weights.size();
@@ -68,7 +95,15 @@ struct WeightLayer {
     }
 
     void set_weights(const std::vector<std::vector<F>>& w) {
-        this->weights = w;
+        weights = w;
+    }
+
+    std::vector<std::vector<F>> get_weights(){
+        return weights;
+    }
+
+    std::vector<std::vector<F>> get_transposed_weights(){
+        return transposed_weights;
     }
 
 private:

@@ -23,6 +23,9 @@ int main() {
     std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
 */
 
+    WeightLayer<float> layer = WeightLayer<float>(4, 5,6);
+
+
 
 
     return 0;

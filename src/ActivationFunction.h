@@ -4,28 +4,28 @@
 #include <vector>
 #include <cmath>
 
-
-template<typename TIn, typename TOut>
-struct Function {
-    virtual TOut compute(TIn x) = 0;
-    //virtual static TOut compute_derivative(TIn x) = 0;
-};
-
 enum struct FunctionType {
     Relu,
     Softmax
 };
+
 template<typename F = float>
-struct ActivationFunction : public Function<std::vector<F>&, std::vector<F>&> {
+struct ActivationFunction {
+    explicit ActivationFunction(FunctionType f):function_type(f){};
+    virtual ~ActivationFunction() = default;
+    virtual std::vector<F>& compute(std::vector<F>& x) = 0;
+    //virtual static TOut compute_derivative(TIn x) = 0;
 
     FunctionType function_type;
 };
 
 
+
+
 template<typename F = float>
 struct ReluActivationFunction : public ActivationFunction<F> {
-    ReluActivationFunction() {
-        this->function_type = FunctionType::Relu;
+
+    ReluActivationFunction():ActivationFunction<F>(FunctionType::Relu) {
     }
 
     std::vector<F>& compute(std::vector<F>& x) override {
@@ -47,9 +47,8 @@ struct ReluActivationFunction : public ActivationFunction<F> {
 
 template<typename F = float>
 struct SoftmaxActivationFunction : public ActivationFunction<F> {
-    SoftmaxActivationFunction() {
-        this->function_type = FunctionType::Softmax;
-    }
+
+    SoftmaxActivationFunction():ActivationFunction<F>(FunctionType::Softmax) {}
 
     std::vector<F>& compute(std::vector<F>& x) override {
         F exp_sum = F(0);

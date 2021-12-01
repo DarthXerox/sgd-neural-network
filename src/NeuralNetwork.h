@@ -13,7 +13,8 @@
 template<typename F = float>
 struct NeuralNetwork {
     NeuralNetwork(const std::string& training_file, const std::string& training_labels, size_t batch_size,
-                  std::vector<size_t> layer_sizes, std::vector<ActivationFunction<F>> functions)
+                  std::vector<size_t> layer_sizes,
+                  std::vector<ActivationFunction<F>*> functions)
     : input_manager(training_file, training_labels), batch_size(batch_size), 
       layer_sizes(layer_sizes), activation_functions(functions) {
         input_layer_size = input_manager.get_training_input_count();
@@ -72,7 +73,7 @@ private:
     const size_t batch_size;
     size_t input_layer_size;
     std::vector<size_t> layer_sizes;
-    std::vector<ActivationFunction<F>> activation_functions;
+    std::vector<ActivationFunction<F>*> activation_functions;
     std::vector<WeightLayer<F>> layers;
 };
 

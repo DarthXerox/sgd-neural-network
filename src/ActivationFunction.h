@@ -11,15 +11,35 @@ enum struct FunctionType {
 
 template<typename F = float>
 struct ActivationFunction {
-    explicit ActivationFunction(FunctionType f):function_type(f){};
-    virtual ~ActivationFunction() = default;
-    virtual std::vector<F>& compute(std::vector<F>& x) = 0;
+    //explicit ActivationFunction(FunctionType f):function_type(f){};
+    //virtual ~ActivationFunction() = default;
+    static std::vector<F>& compute(FunctionType type, std::vector<F>& x) {
+        switch (type) {
+            case FunctionType::Relu:
+                for (F& val : x) {
+                    val = val < F(0) ? F(0) : val;
+                }
+                return x;
+                break;
+            case FunctionType::Softmax: {
+                F exp_sum = F(0);
+                for (size_t i = 0; i < x.size(); ++i) {
+                    exp_sum += std::exp(x[i]);
+                }
+
+                for (size_t i = 0; i < x.size(); ++i) {
+                    x[i] = std::exp(x[i]) / exp_sum;
+                }
+
+                return x;
+                //break;
+            }
+        }
+    }
     //virtual static TOut compute_derivative(TIn x) = 0;
 
-    FunctionType function_type;
+    //FunctionType function_type;
 };
-
-
 
 
 template<typename F = float>

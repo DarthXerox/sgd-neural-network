@@ -1,0 +1,2 @@
+mozno to urobit tak, ze pri forward a backward prope, sa budu tie vectory pre kazdy layer vopred inicializovat,
+usetri to cas

@@ -68,22 +68,35 @@ struct WeightLayer {
 
     /**
      * This could be insitu if necessary
+     * @param output can contain garbage, is meant to be overwritten
      * @param weights must be transposed
      */
-    std::vector<F> compute_inner_potential(const std::vector<F>& input_values){
-        if (weights.empty() || input_values.size() != weights[0].size() || biases.size() != weights.size()) {
+    void compute_inner_potential(const std::vector<F>& input_values, std::vector<F>& output){
+        /*if (weights.empty() || input_values.size() != weights[0].size() || biases.size() != weights.size()) {
             return std::vector<F>(); // throw??
-        }
+        }*/
 
-        std::vector<F> result(weights.size());
+        //std::vector<F> result(weights.size());
+        WeightLayer<F>::vector_matrix_mul(input_values, transposed_weights, output);
         for (size_t i = 0; i < input_values; ++i) {
-            for (size_t j = 0; j < weights.size(); ++j) {
-                result[i] += weights[i][j] * input_values[j];
-            }
-            result[i] += biases[i];
+            output[i] += biases[i];
         }
+    }
 
-        return result;
+    /**
+     * preconditions:
+     *      input_values.size() == matrix[0].size()
+     *      output.size() == matrix[0].size()
+     */
+    static void vector_matrix_mul(const std::vector<F>& input_values, const std::vector<std::vector<F>>& matrix,
+                           std::vector<F>& output) {
+        #pragma omp parallel for num_threads(8)
+            for (size_t i = 0; i < matrix.size(); ++i) {
+                output[i] = F(0);
+                for (size_t j = 0; j < input_values.size(); ++j) {
+                    output[i] += matrix[i][j] * input_values[j];
+                }
+            }
     }
 
     size_t get_upper_layer_len() const {

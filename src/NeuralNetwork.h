@@ -37,19 +37,10 @@ struct NeuralNetwork {
             lower_layer_size = upper_layer_size;
         }
 
+        prepare_backup();
     }
 
-    std::vector<F> forward_propagation(const Image<F>& input) const {
-        std::vector<F> layer_inputs = input.get_pixels();
-        assert(layer_inputs.size() == input_layer_size);
 
-        for (size_t i = 0; i < layer_sizes.size(); ++i) {
-            layer_inputs = layers[i].compute_inner_potential(layer_inputs);
-            activation_functions[i].compute(layer_inputs);
-        }
-
-        return layer_inputs;
-    }
 
     void train() {
 
@@ -60,6 +51,30 @@ struct NeuralNetwork {
     void start_testing(const std::string& test_file, const std::string& output_file);
 
 private:
+    std::vector<F> forward_propagation_single_layer(const std::vector<F>& input, size_t layer_index) const {
+        std::vector<F> mutable_input = input;
+        mutable_input = layers[layer_index].compute_inner_potential(mutable_input);
+        ActivationFunction<float>::compute(activation_functions[layer_index], mutable_input);
+
+        return mutable_input;
+    }
+
+
+    void forward_propagation(const Image<F>& input) const {
+        #pragma omp parallel for num_threads(NUM_THREADS) // TODO this may fail
+            for (size_t i = 0; i < layer_sizes.size(); ++i) {
+                layers[i].compute_inner_potential(input.get_pixels(), forward_prop_backup[i]);
+                ActivationFunction<float>::compute(forward_prop_backup[i]);
+            }
+    }
+
+
+    void prepare_backup() {
+        for (size_t i = 1; i < layer_sizes.size(); ++i) {
+            forward_prop_backup.push_back(std::vector<F>(layer_sizes[i]));
+        }
+    }
+
 
     std::vector<F>& sum_two_vectors(std::vector<F>& fst, const std::vector<F>& snd) {
         assert(fst.size() == snd.size());
@@ -75,6 +90,8 @@ private:
     std::vector<size_t> layer_sizes;
     std::vector<FunctionType> activation_functions;
     std::vector<WeightLayer<F>> layers;
+    std::vector<std::vector<F>> forward_prop_backup;
+    const int NUM_THREADS = 8;
 };
 
 

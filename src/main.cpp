@@ -24,14 +24,11 @@ int main() {
 //    float mean = input.get_mean();
 //    float d = input.get_standard_deviation();
 //    std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
-    ReluActivationFunction<float> relu = ReluActivationFunction<float>();
-    SoftmaxActivationFunction<float> softmax = SoftmaxActivationFunction<float>();
-
-    std::vector<ActivationFunction<float>*> func = {&relu, &softmax};
 
 
     NeuralNetwork<float> neuralNetwork = NeuralNetwork<float>(SMOL_VECTORS, SMOL_LABELS, 16,
-                                                              {64,10}, func);
+                                                              {64,10},
+                                                              {FunctionType::Relu, FunctionType::Softmax});
 
 
 

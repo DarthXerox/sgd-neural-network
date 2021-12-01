@@ -4,28 +4,48 @@
 #include <vector>
 #include <cmath>
 
-
-template<typename TIn, typename TOut>
-struct Function {
-    virtual TOut compute(TIn x) = 0;
-    //virtual static TOut compute_derivative(TIn x) = 0;
-};
-
 enum struct FunctionType {
     Relu,
     Softmax
 };
-template<typename F = float>
-struct ActivationFunction : public Function<std::vector<F>&, std::vector<F>&> {
 
-    FunctionType function_type;
+template<typename F = float>
+struct ActivationFunction {
+    //explicit ActivationFunction(FunctionType f):function_type(f){};
+    //virtual ~ActivationFunction() = default;
+    static std::vector<F>& compute(FunctionType type, std::vector<F>& x) {
+        switch (type) {
+            case FunctionType::Relu:
+                for (F& val : x) {
+                    val = val < F(0) ? F(0) : val;
+                }
+                return x;
+                break;
+            case FunctionType::Softmax: {
+                F exp_sum = F(0);
+                for (size_t i = 0; i < x.size(); ++i) {
+                    exp_sum += std::exp(x[i]);
+                }
+
+                for (size_t i = 0; i < x.size(); ++i) {
+                    x[i] = std::exp(x[i]) / exp_sum;
+                }
+
+                return x;
+                //break;
+            }
+        }
+    }
+    //virtual static TOut compute_derivative(TIn x) = 0;
+
+    //FunctionType function_type;
 };
 
 
 template<typename F = float>
 struct ReluActivationFunction : public ActivationFunction<F> {
-    ReluActivationFunction() {
-        this->function_type = FunctionType::Relu;
+
+    ReluActivationFunction():ActivationFunction<F>(FunctionType::Relu) {
     }
 
     std::vector<F>& compute(std::vector<F>& x) override {
@@ -47,9 +67,8 @@ struct ReluActivationFunction : public ActivationFunction<F> {
 
 template<typename F = float>
 struct SoftmaxActivationFunction : public ActivationFunction<F> {
-    SoftmaxActivationFunction() {
-        this->function_type = FunctionType::Softmax;
-    }
+
+    SoftmaxActivationFunction():ActivationFunction<F>(FunctionType::Softmax) {}
 
     std::vector<F>& compute(std::vector<F>& x) override {
         F exp_sum = F(0);

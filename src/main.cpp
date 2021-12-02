@@ -8,7 +8,10 @@
 
 #define SMOL_VECTORS "../data/smol_vectors.csv"
 #define SMOL_LABELS "../data/smol_labels.csv"
-#define TRAIN_VECTORS "../data/fashion_mnist_test_vectors.csv"
+#define TRAIN_VECTORS "../data/fashion_mnist_train_vectors.csv"
+#define TRAIN_LABELS "../data/fashion_mnist_train_labels.csv"
+#define TEST_VECTORS "../data/fashion_mnist_test_vectors.csv"
+#define TEST_LABELS "../data/fashion_mnist_test_labels.csv"
 #define TRAIN_PREDICTIONS "../actualPredictions"
 
 
@@ -32,9 +35,7 @@ int main() {
 
 
 
-    WeightLayer<float> layer = WeightLayer<float>(4, 5,6);
-
-
+    neuralNetwork.train();
 
 
     return 0;

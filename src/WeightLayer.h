@@ -78,7 +78,7 @@ struct WeightLayer {
 
         //std::vector<F> result(weights.size());
         WeightLayer<F>::vector_matrix_mul(input_values, transposed_weights, output);
-        for (size_t i = 0; i < input_values; ++i) {
+        for (size_t i = 0; i < output.size(); ++i) {
             output[i] += biases[i];
         }
     }
@@ -86,11 +86,11 @@ struct WeightLayer {
     /**
      * preconditions:
      *      input_values.size() == matrix[0].size()
-     *      output.size() == matrix[0].size()
+     *      output.size() == matrix.size()
      */
     static void vector_matrix_mul(const std::vector<F>& input_values, const std::vector<std::vector<F>>& matrix,
                            std::vector<F>& output) {
-        #pragma omp parallel for num_threads(8)
+        //#pragma omp parallel for num_threads(8)
             for (size_t i = 0; i < matrix.size(); ++i) {
                 output[i] = F(0);
                 for (size_t j = 0; j < input_values.size(); ++j) {
@@ -118,6 +118,11 @@ struct WeightLayer {
     std::vector<std::vector<F>> get_transposed_weights(){
         return transposed_weights;
     }
+
+    F& get_weight(size_t i, size_t j){
+        return weights[i][j];
+    }
+
 
 private:
     std::vector<std::vector<F>> weights;

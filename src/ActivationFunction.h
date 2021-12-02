@@ -35,6 +35,19 @@ struct ActivationFunction {
                 //break;
             }
         }
+        return x;
+    }
+    static F compute_derivative(FunctionType type, F& x) {
+        switch (type) {
+            case FunctionType::Relu: {
+                return x < (0) ? F(0) : F(1);
+            }
+            case FunctionType::Softmax: {
+                return x;
+            }
+
+        }
+        return x;
     }
     //virtual static TOut compute_derivative(TIn x) = 0;
 

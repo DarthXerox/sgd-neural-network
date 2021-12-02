@@ -15,6 +15,10 @@ struct Image {
         return pixels;
     }
 
+    F get_label() const{
+        return label;
+    }
+
 private:
     std::vector<F> pixels;
     //F value_predicted;

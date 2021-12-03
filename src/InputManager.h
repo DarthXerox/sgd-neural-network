@@ -5,6 +5,9 @@
 #include <fstream>
 #include <cmath>
 #include <sstream>
+#include <algorithm>
+#include <random>
+
 
 template<typename F = float> struct InputManager;
 
@@ -73,6 +76,16 @@ struct InputManager {
         return training_data.front().get_pixels().size();
     }
 
+    void shuffle_data() {
+
+        /*std::random_device rd();
+        std::default_random_engine rng(rd());
+        std::shuffle(std::begin(cards_), std::end(cards_), rng);*/
+
+        srand(_SEED); // TODO this should be seeded from one point
+        std::random_shuffle(training_data.begin(), training_data.end());
+    }
+
 private:
     void init_images(const std::string& filename) {
         std::ifstream images(filename);
@@ -139,6 +152,7 @@ private:
     std::vector<Image<F>> training_data;
     F mean = F(0);
     F standard_deviation = F(0);
+    const int _SEED = 42;
     //const size_t batch_size;
     //ImageInputIterator<F> image_input_iterator;
 };

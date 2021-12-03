@@ -29,7 +29,7 @@ int main() {
 //    std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
 
 
-    NeuralNetwork<float> neuralNetwork = NeuralNetwork<float>(SMOL_VECTORS, SMOL_LABELS, 16,
+    NeuralNetwork<float> neuralNetwork = NeuralNetwork<float>(SMOL_VECTORS, SMOL_LABELS, 2,
                                                               {64,10},
                                                               {FunctionType::Relu, FunctionType::Softmax});
 

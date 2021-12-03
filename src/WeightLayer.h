@@ -53,7 +53,7 @@ struct WeightLayer {
         size_t col_len = weight_matrix[0].size();
         std::vector<std::vector<F>> result(col_len);
 
-//        #pragma omp parallel for
+//TODO        #pragma omp parallel for
         for (size_t j = 0; j < col_len; ++j) {
             std::vector<F> new_row(weight_matrix.size());
             for (size_t i = 0; i < weight_matrix.size(); ++i) {
@@ -90,7 +90,7 @@ struct WeightLayer {
      */
     static void vector_matrix_mul(const std::vector<F>& input_values, const std::vector<std::vector<F>>& matrix,
                            std::vector<F>& output) {
-        //#pragma omp parallel for num_threads(8)
+        //TODO #pragma omp parallel for num_threads(8)
             for (size_t i = 0; i < matrix.size(); ++i) {
                 output[i] = F(0);
                 for (size_t j = 0; j < input_values.size(); ++j) {

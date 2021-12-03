@@ -40,7 +40,7 @@ struct ActivationFunction {
     static F compute_derivative(FunctionType type, F& x) {
         switch (type) {
             case FunctionType::Relu: {
-                return x < (0) ? F(0) : F(1);
+                return x <= F(0) ? F(0) : F(1);
             }
             case FunctionType::Softmax: {
                 return x;

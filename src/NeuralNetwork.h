@@ -47,58 +47,91 @@ struct NeuralNetwork {
      * maybe add adam
      */
     void train() {
-        // rozdelit input na treningovy a validacny a testovaci (50 10 10 ?)
-
-        // while (error_function.result > nejaka_mala_hodnota) + pocitat epochy
-        for (size_t i = 0; i < input_manager.get_images().size(); ++i) {
-            // prepare 16 matrices
-            //
-            auto backward_prop_backup = std::vector<std::vector<F>>(),
-                 backward_batch_average = std::vector<std::vector<F>>(),
-                 forward_batch_average = std::vector<std::vector<F>>(),
-                 forward_prop_backup = std::vector<std::vector<F>>();
+        // rozdelit input na treningovy a validacny a testovaci (60 20 20 ?)
+        size_t training_data_size = input_manager.get_images().size() * 0.80;
+        size_t validation_data_size = input_manager.get_images().size() * 0.20;
+        F error_function_sum = 0;
 
 
-            for (unsigned long & layer_size : layer_sizes) {
-                backward_prop_backup.push_back(std::vector<F>(layer_size));
-                forward_prop_backup.push_back(std::vector<F>(layer_size));
-                backward_batch_average.push_back(std::vector<F>(layer_size));
-                forward_batch_average.push_back(std::vector<F>(layer_size));
-            }
-            backward_prop_backup.front().clear();
+        while (true) {
+            // OR while (error_function.result > nejaka_mala_hodnota) + pocitat epochy
+            for (size_t i = 0; i < training_data_size; ++i) {
+                // prepare 16 matrices
+                //
+                auto backward_prop_backup = std::vector<std::vector<F>>(),
+                        backward_batch_average = std::vector<std::vector<F>>(),
+                        forward_batch_average = std::vector<std::vector<F>>(),
+                        forward_prop_backup = std::vector<std::vector<F>>();
 
-            for (size_t j = 0; j < batch_size; j++){
-                forward_propagation(input_manager.get_images()[i + j], forward_prop_backup);
-                back_propagation(input_manager.get_images()[i + j].get_label(), forward_prop_backup,
-                                 backward_prop_backup);
 
-                // add to the batch sum
-                for (size_t k = 0; k < backward_prop_backup.size(); ++k) {
-                    sum_two_vectors(backward_batch_average[k], backward_prop_backup[k]);
+                for (unsigned long &layer_size : layer_sizes) {
+                    backward_prop_backup.push_back(std::vector<F>(layer_size));
+                    forward_prop_backup.push_back(std::vector<F>(layer_size));
+                    backward_batch_average.push_back(std::vector<F>(layer_size));
+                    forward_batch_average.push_back(std::vector<F>(layer_size));
+                }
+                backward_prop_backup.front().clear();
+
+                for (size_t j = 0; j < batch_size; j++) {
+                    forward_propagation(input_manager.get_images()[i + j], forward_prop_backup);
+                    back_propagation(input_manager.get_images()[i + j].get_label(), forward_prop_backup,
+                                     backward_prop_backup);
+
+                    // add to the batch sum
+                    for (size_t k = 0; k < backward_prop_backup.size(); ++k) {
+                        sum_two_vectors(backward_batch_average[k], backward_prop_backup[k]);
+                    }
+
+                    for (size_t k = 0; k < forward_prop_backup.size(); ++k) {
+                        sum_two_vectors(forward_batch_average[k], forward_prop_backup[k]);
+                    }
+                }
+                i += batch_size;
+
+                // take average of the batch
+                for (auto &vec : backward_batch_average) {
+                    for (auto &el : vec) {
+                        el /= F(batch_size);
+                    }
+                }
+                for (auto &vec : forward_batch_average) {
+                    for (auto &el : vec) {
+                        el /= F(batch_size);
+                    }
                 }
 
-                for (size_t k = 0; k < forward_prop_backup.size(); ++k) {
-                    sum_two_vectors(forward_batch_average[k], forward_prop_backup[k]);
+                // change learning rate
+                // CORRECT weights + biases including learning rate
+
+                break;
+            }
+            ++epochs;
+
+            if (epochs > 3) {
+                F old_error = error_function_sum;
+                error_function_sum = 0;
+
+                for (size_t i = training_data_size; i < training_data_size + validation_data_size; ++i) {
+                    auto forward_prop_backup = std::vector<std::vector<F>>();
+
+
+                    for (unsigned long &layer_size : layer_sizes) {
+                        forward_prop_backup.push_back(std::vector<F>(layer_size));
+                    }
+
+                    forward_propagation(input_manager.get_images()[i], forward_prop_backup);
+
+                    error_function_sum += std::log(
+                            forward_prop_backup.back()[input_manager.get_images()[i].get_label()]);
+                }
+                error_function_sum /= -1 * validation_data_size;
+
+                if (epochs > 4) {
+                    if (old_error < error_function_sum) {
+                        return;
+                    }
                 }
             }
-            i += batch_size;
-
-            // take average of the batch
-            for (auto& vec : backward_batch_average) {
-                for (auto& el : vec) {
-                    el /= F(batch_size);
-                }
-            }
-            for (auto& vec : forward_batch_average) {
-                for (auto& el : vec) {
-                    el /= F(batch_size);
-                }
-            }
-
-            // change learning rate
-            // CORRECT weights + biases including learning rate
-
-            break;
         }
     }
     void start_testing(const std::string& test_file, const std::string& output_file);

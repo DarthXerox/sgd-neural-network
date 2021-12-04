@@ -76,14 +76,14 @@ struct InputManager {
         return training_data.front().get_pixels().size();
     }
 
-    void shuffle_data() {
+    void shuffle_data(size_t to) {
 
         /*std::random_device rd();
         std::default_random_engine rng(rd());
         std::shuffle(std::begin(cards_), std::end(cards_), rng);*/
 
         srand(_SEED); // TODO this should be seeded from one point
-        std::random_shuffle(training_data.begin(), training_data.end());
+        std::random_shuffle(training_data.begin(), training_data.begin() + to);
     }
 
 private:

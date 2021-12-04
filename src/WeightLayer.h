@@ -31,11 +31,14 @@ struct WeightLayer {
         transposed_weights = get_transposed_weights(weights);
     }
     
-    void correct_weights(const std::vector<std::vector<F>>& errors) {
+    void correct_weights(const std::vector<std::vector<F>>& errors, const std::vector<F>& bias_error) {
         for (size_t i = 0; i < weights.size(); ++i) {
             for (size_t j = 0; j < weights.front().size(); ++j) {
                 weights[i][j] += errors[i][j];
             }
+        }
+        for (int i = 0; i < bias_error.size(); ++i) {
+            biases[i] += bias_error[i];
         }
 
         transposed_weights = WeightLayer<F>::get_transposed_weights(weights);

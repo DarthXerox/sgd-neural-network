@@ -4,3 +4,5 @@ usetri to cas
  - poriesit OMP parallel pre zmenu vah a compute_potential
  - vytiahnut init vsetkych tych matic v train() von
  - momentum
+
+

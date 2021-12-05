@@ -43,7 +43,8 @@ struct NeuralNetwork {
             bias_gradients.push_back(std::vector<F>(layer_sizes[j+1], 0));
             bias_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
         }
-        learning_rate = 0.01;
+        //learning_rate = 0.05;
+        //base_learning_rate = learning_rate;
 //        prepare_backup();
     }
 
@@ -55,20 +56,24 @@ struct NeuralNetwork {
      */
     void train() {
         // rozdelit input na treningovy a validacny a testovaci (60 20 20 ?)
-        size_t training_data_size = input_manager.get_images().size()*0.99;
-//        size_t validation_data_size = input_manager.get_images().size() * 0.20;
+        size_t training_data_size = input_manager.get_images().size() * 0.8;
+        size_t validation_data_size = input_manager.get_images().size() * 0.20;
         F error_function_sum = 0;
 
         //TODO 1 epocha incorrect layer size error
 //        terminate called after throwing an instance of 'std::runtime_error'
 //        what():  Forward prop incorrect layer size! Layer num: 0 size was: 0 and should be: 784
+
         while (epochs != 6) {
-            std::cout << epochs << std::endl;
-            // OR while (error_function.result > nejaka_mala_hodnota) + pocitat epochy
-            for (size_t i = 0; i < training_data_size; ++i) {
+            std::cout << "Epoch number: " << epochs << std::endl;
+            for (size_t i = 0; i < training_data_size; i += batch_size) {
+                learning_rate = base_learning_rate / F(F(1) + (F(epochs) * F(training_data_size) + F(i)) / F(training_data_size));
+
                 if(i % 10000 < 16){
-                    std::cout << i << std::endl;
+                    std::cout << "Processed: " << i;// << std::endl;
+                    std::cout << " learning rate: " << learning_rate << std::endl;
                 }
+
                 // prepare 16 matrices
                 auto backward_prop_backup = std::vector<std::vector<F>>(),
                         backward_batch_average = std::vector<std::vector<F>>(),
@@ -82,7 +87,7 @@ struct NeuralNetwork {
                     backward_batch_average.push_back(std::vector<F>(layer_size));
                     forward_batch_average.push_back(std::vector<F>(layer_size));
                 }
-                backward_prop_backup.front().clear();
+                //backward_prop_backup.front().clear();
 
                 for (size_t j = 0; j < batch_size; j++) {
                     forward_propagation(input_manager.get_images()[i + j], forward_prop_backup);
@@ -98,94 +103,40 @@ struct NeuralNetwork {
                         sum_two_vectors(forward_batch_average[k], forward_prop_backup[k]);
                     }
                 }
-                i += batch_size;
 
+                // TODO kuknut v slajdoch
                 // take average of the batch
-                for (auto &vec : backward_batch_average) {
-                    for (auto &el : vec) {
-                        el /= F(batch_size);
-                    }
-                }
-                for (auto &vec : forward_batch_average) {
-                    for (auto &el : vec) {
-                        el /= F(batch_size);
-                    }
-                }
+//                for (auto &vec : backward_batch_average) {
+//                    for (auto &el : vec) {
+//                        el /= F(batch_size);
+//                    }
+//                }
+//                for (auto &vec : forward_batch_average) {
+//                    for (auto &el : vec) {
+//                        el /= F(batch_size);
+//                    }
+//                }
 
                 // change learning rate
-                // CORRECT weights + biases including learning rate
 
-
-
-                for (int layer_index = 1; layer_index < layers.size(); ++layer_index) {
-
-                    if(layer_index == layers.size()){
-                        for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
-                            for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
-                                //vaha z i do j = back z j * output z i
-                                all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
-                                        * forward_batch_average[layer_index - 1][j];
-                            }
-                        }
-                        for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
-                            bias_gradients[layer_index][j] = backward_batch_average[layer_index][j];
-                        }
-                    }
-                    else{
-                        for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
-                            for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
-                                //vaha z i do j = back z j * output z i
-                                all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
-                                        * ActivationFunction<F>::compute_derivative
-                                        (activation_functions[layer_index - 1], forward_batch_average[layer_index][k])
-                                        * forward_batch_average[layer_index - 1][j];
-                            }
-                        }
-                        for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
-                            bias_gradients[layer_index][j] = backward_batch_average[layer_index][j]
-                                    * ActivationFunction<F>::compute_derivative
-                                    (activation_functions[layer_index - 1], forward_batch_average[layer_index][j]);
-                        }
-                    }
-                }
+                determine_gradients(forward_batch_average, backward_batch_average);
                 correct_weights(all_gradients, momentums, bias_gradients, bias_moments);
             }
 
-
-
             ++epochs;
 
-//            if (epochs > 3) {
-//                F old_error = error_function_sum;
-//                error_function_sum = 0;
-//
-//                for (size_t i = training_data_size; i < training_data_size + validation_data_size; ++i) {
-//                    auto forward_prop_backup = std::vector<std::vector<F>>();
-//
-//
-//                    for (unsigned long &layer_size : layer_sizes) {
-//                        forward_prop_backup.push_back(std::vector<F>(layer_size));
-//                    }
-//
-//                    forward_propagation(input_manager.get_images()[i], forward_prop_backup);
-//
-//                    error_function_sum += std::log(
-//                            forward_prop_backup.back()[input_manager.get_images()[i].get_label()]);
-//                }
-//                error_function_sum /= -1 * validation_data_size;
-//                if (epochs > 4) {
-//                    if (old_error < error_function_sum) {
-//                        return;
-//                    }
-//                }
-//            }
-            input_manager.shuffle_data(training_data_size - 1);
+            /**** validation was here ****/
+
+            std::cout << "Accuracy in epochs " << epochs << " is "
+                      << get_current_accuracy(training_data_size, validation_data_size) << std::endl;
+
+            input_manager.shuffle_data(training_data_size);
         }
     }
 
     void start_testing(const std::string& test_file, const std::string& output_file){
         InputManager<F> test_input = InputManager<F>(test_file);
-        auto test_results = std::vector<std::string>(test_input.get_training_input_count());
+        auto test_results = std::vector<size_t>(test_input.get_training_input_count());
 
         //#pragma omp parallel for num_threads(NUM_THREADS)
         for (size_t i = 0; i < test_input.get_training_input_count(); ++i) {
@@ -197,17 +148,18 @@ struct NeuralNetwork {
             test_results[i] = vector_max(forward_prop_backup.back());
         }
         std::ofstream test_predictions;
-        test_predictions.open (output_file);
+        test_predictions.open(output_file, std::ostream::out | std::ostream::trunc);
 
         for (int i = 0; i < test_input.get_training_input_count() - 1; ++i) {
-            test_predictions << test_results[i] + "\n";
+            test_predictions << test_results[i] << std::endl;
         }
         test_predictions << test_results[test_input.get_training_input_count() - 1] ;
         test_predictions.close();
     }
 
-    std::string vector_max(std::vector<F>& layer){
-        F max_value;
+    // som upravil
+    size_t vector_max(std::vector<F>& layer){
+        F max_value = 0;
         int index = 0;
         for (int i = 0; i < layer.size(); ++i) {
             if(max_value < layer[i]){
@@ -215,7 +167,7 @@ struct NeuralNetwork {
                 index = i;
             }
         }
-        return std::to_string(index);
+        return index;
     }
 
 
@@ -225,16 +177,65 @@ struct NeuralNetwork {
         }
     }
 
-private:
-    std::vector<F> forward_propagation_single_layer(const std::vector<F>& input, size_t layer_index) const {
-        std::vector<F> mutable_input = input;
-        mutable_input = layers[layer_index].compute_inner_potential(mutable_input);
-        ActivationFunction<float>::compute(activation_functions[layer_index], mutable_input);
-
-        return mutable_input;
+    void determine_gradients(const std::vector<std::vector<F>>& forward_batch_average,
+                             const std::vector<std::vector<F>>& backward_batch_average) {
+        for (int layer_index = 1; layer_index < layers.size(); ++layer_index) {
+            if (layer_index == layers.size()){
+                for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
+                    for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
+                        // weight from i to j = back from j * output from i
+                        all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
+                                * forward_batch_average[layer_index - 1][j];
+                    }
+                }
+                for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
+                    bias_gradients[layer_index][j] = backward_batch_average[layer_index][j];
+                }
+            }
+            else {
+                for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
+                    for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
+                        // weight from i to j = back from j * output from i
+                        all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
+                                * ActivationFunction<F>::compute_derivative(activation_functions[layer_index - 1],
+                                                                            forward_batch_average[layer_index][k])
+                                * forward_batch_average[layer_index - 1][j];
+                    }
+                }
+                for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
+                    bias_gradients[layer_index][j] = backward_batch_average[layer_index][j]
+                            * ActivationFunction<F>::compute_derivative(activation_functions[layer_index - 1],
+                                                                        forward_batch_average[layer_index][j]);
+                }
+            }
+        }
     }
 
+    F get_current_accuracy(size_t training_data_size, size_t validation_data_size) {
+        int correct = 0;
+        for (size_t i = training_data_size; i < training_data_size + validation_data_size; ++i) {
+            auto forward_prop_backup = std::vector<std::vector<F>>();
 
+            for (unsigned long &layer_size : layer_sizes) {
+                forward_prop_backup.push_back(std::vector<F>(layer_size));
+            }
+
+            forward_propagation(input_manager.get_images()[i], forward_prop_backup);
+            size_t index = vector_max(forward_prop_backup.back());
+            //correct = index == input_manager.get_images()[i].get_label() ? correct + 1 : correct;
+            correct += size_t(index == input_manager.get_images()[i].get_label());
+
+
+//            for (auto el : forward_prop_backup.back()) {
+//                std::cout << el << " ";
+//            }
+//            std::cout << "Correct: " << correct << " now predicted: " << index << "should be: "
+//                        << input_manager.get_images()[i].get_label() << std::endl;
+        }
+        return correct / F(validation_data_size);
+    }
+
+private:
     /**
      * pre:
      *      forward_prop_backup.size() == layer_sizes.size()
@@ -269,7 +270,6 @@ private:
      */
     void back_propagation(size_t label, const  std::vector<std::vector<F>>& forward_prop_backup,
                           std::vector<std::vector<F>>& backprop_layer_output) {
-        //backprop-example-proof.png prekreslit v painte a pochopit vystup back_propagation
         if (backprop_layer_output.size() != layer_sizes.size()) {
             throw std::runtime_error(std::string("Backward prop incorrect output vector size: "
             + std::to_string(backprop_layer_output.size())+ " and should be: " + std::to_string(layer_sizes.size())));
@@ -337,12 +337,19 @@ private:
         for (int i = 0; i < gradients.size(); ++i) {
             for (int j = 0; j < gradients[i].size(); ++j) {
                 for (int k = 0; k < gradients[i][j].size(); ++k) {
+//                    momentum[i][j][k] = -learning_rate * ((1- momentum_influence) * gradients[i][j][k]
+//                              + momentum_influence * momentum[i][j][k]);
                     momentum[i][j][k] = -learning_rate * gradients[i][j][k] + momentum_influence * momentum[i][j][k];
 //                    momentum[i][j][k] = -learning_rate * gradients[i][j][k];
                 }
             }
+
+
+
             //TODO momentum na biases
             for (int j = 0; j < bias[i].size(); ++j) {
+//                bias_moment[i][j] = -learning_rate * ((1- momentum_influence)  * bias[i][j]
+//                        + momentum_influence * bias_moment[i][j]);
                 bias_moment[i][j] = -learning_rate * bias[i][j] + momentum_influence * bias_moment[i][j];
             }
             layers[i].correct_weights(momentum[i], bias_moment[i]);
@@ -353,11 +360,14 @@ private:
 
 
     std::vector<F>& sum_two_vectors(std::vector<F>& fst, const std::vector<F>& snd) {
-        if(fst.size() < snd.size()){
-            for (size_t i = fst.size(); i < snd.size(); ++i) {
-                fst.push_back(0);
-            }
+        if (fst.size() != snd.size()) {
+            throw std::runtime_error("Wrong vector sizes in their sum");
         }
+//        if(fst.size() < snd.size()){
+//            for (size_t i = fst.size(); i < snd.size(); ++i) {
+//                fst.push_back(0);
+//            }
+//        }
         for (size_t i = 0; i < fst.size(); ++i) {
             fst[i] += snd[i];
         }
@@ -366,7 +376,9 @@ private:
 
     InputManager<F> input_manager;
     const size_t batch_size;
-    float momentum_influence = 0.9;
+    float momentum_influence = 0.7; // TODO MOMENTUM_INFLUENCE 0.3
+    float base_learning_rate = 0.05;
+    float learning_rate = 0.05;
     //size_t input_layer_size;
     std::vector<size_t> layer_sizes;
     std::vector<FunctionType> activation_functions;
@@ -379,7 +391,7 @@ private:
     std::vector<std::vector<std::vector<F>>> momentums;
     std::vector<std::vector<std::vector<F>>> all_gradients;
     std::vector<F> forward_prop_batch;
-    float learning_rate;
+
     int epochs = 0;
     const int NUM_THREADS = 8;
 };

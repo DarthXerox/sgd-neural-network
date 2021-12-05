@@ -37,7 +37,7 @@ struct ActivationFunction {
         }
         return x;
     }
-    static F compute_derivative(FunctionType type, F& x) {
+    static F compute_derivative(FunctionType type, F x) {
         switch (type) {
             case FunctionType::Relu: {
                 return x <= F(0) ? F(0) : F(1);

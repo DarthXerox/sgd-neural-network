@@ -10,14 +10,15 @@ endif()
 
 set(CMAKE_CXX_STANDARD 14)
 # debug:
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
+
+
 
 # no debug
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
 
 
 # -Ofast
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 

@@ -39,9 +39,11 @@ struct NeuralNetwork {
         }
         for (int j = 0; j < layer_sizes.size() - 1; ++j) {
             momentums.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
+            raw_momentum.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
             all_gradients.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
             bias_gradients.push_back(std::vector<F>(layer_sizes[j+1], 0));
             bias_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
+            bias_raw_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
         }
         //learning_rate = 0.05;
         //base_learning_rate = learning_rate;
@@ -69,7 +71,7 @@ struct NeuralNetwork {
             for (size_t i = 0; i < training_data_size; i += batch_size) {
                 learning_rate = base_learning_rate / F(F(1) + (F(epochs) * F(training_data_size) + F(i)) / F(training_data_size));
 
-                if(i % 10000 < 16){
+                if(i % 10000 < batch_size){
                     std::cout << "Processed: " << i;// << std::endl;
                     std::cout << " learning rate: " << learning_rate << std::endl;
                 }
@@ -120,7 +122,7 @@ struct NeuralNetwork {
                 // change learning rate
 
                 determine_gradients(forward_batch_average, backward_batch_average);
-                correct_weights(all_gradients, momentums, bias_gradients, bias_moments);
+                correct_weights(i + batch_size);
             }
 
             ++epochs;
@@ -179,36 +181,38 @@ struct NeuralNetwork {
 
     void determine_gradients(const std::vector<std::vector<F>>& forward_batch_average,
                              const std::vector<std::vector<F>>& backward_batch_average) {
-        for (int layer_index = 1; layer_index < layers.size(); ++layer_index) {
-            if (layer_index == layers.size()){
-                for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
-                    for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
-                        // weight from i to j = back from j * output from i
-                        all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
-                                * forward_batch_average[layer_index - 1][j];
-                    }
-                }
-                for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
-                    bias_gradients[layer_index][j] = backward_batch_average[layer_index][j];
-                }
-            }
-            else {
-                for (size_t j = 0; j < layers[layer_index - 1].get_lower_layer_len(); ++j) {
-                    for (size_t k = 0; k < layers[layer_index-1].get_upper_layer_len(); ++k) {
-                        // weight from i to j = back from j * output from i
-                        all_gradients[layer_index - 1][j][k] = backward_batch_average[layer_index][k]
-                                * ActivationFunction<F>::compute_derivative(activation_functions[layer_index - 1],
-                                                                            forward_batch_average[layer_index][k])
-                                * forward_batch_average[layer_index - 1][j];
-                    }
-                }
-                for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
-                    bias_gradients[layer_index][j] = backward_batch_average[layer_index][j]
-                            * ActivationFunction<F>::compute_derivative(activation_functions[layer_index - 1],
-                                                                        forward_batch_average[layer_index][j]);
-                }
-            }
+        for (int layer_index = 0; layer_index < layers.size(); ++layer_index) {
+
+           if(layer_index + 1 == layers.size()){
+               for (size_t j = 0; j < layers[layer_index].get_lower_layer_len(); ++j) {
+                   for (size_t k = 0; k < layers[layer_index].get_upper_layer_len(); ++k) {
+                       //vaha z i do j = back z j * output z i
+                       all_gradients[layer_index][j][k] = backward_batch_average[layer_index + 1][k]
+                               * forward_batch_average[layer_index][j];
+                   }
+               }
+               for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
+                   bias_gradients[layer_index][j] = backward_batch_average[layer_index + 1][j];
+               }
+           }
+           else{
+               for (size_t j = 0; j < layers[layer_index].get_lower_layer_len(); ++j) {
+                   for (size_t k = 0; k < layers[layer_index].get_upper_layer_len(); ++k) {
+                       //vaha z i do j = back z j * output z i
+                       all_gradients[layer_index][j][k] = backward_batch_average[layer_index + 1][k]
+                               * ActivationFunction<F>::compute_derivative
+                               (activation_functions[layer_index], forward_batch_average[layer_index + 1][k])
+                               * forward_batch_average[layer_index][j];
+                   }
+               }
+               for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
+                   bias_gradients[layer_index][j] = backward_batch_average[layer_index + 1][j]
+                           * ActivationFunction<F>::compute_derivative
+                           (activation_functions[layer_index], forward_batch_average[layer_index + 1][j]);
+               }
+           }
         }
+
     }
 
     F get_current_accuracy(size_t training_data_size, size_t validation_data_size) {
@@ -284,7 +288,7 @@ private:
         for (size_t l_size = layers.size(); l_size > 1; l_size--){
             if (l_size == layers.size()){ // the top layer is always softmax
                 backprop_layer_output[l_size] = std::vector<F>(forward_prop_backup[l_size]);
-                backprop_layer_output[l_size][label] -= 1;
+                backprop_layer_output[l_size][label] = backprop_layer_output[l_size][label] - 1;
                 for (size_t i = 0; i < forward_prop_backup[l_size - 1].size(); i++){
                     F out_sum = 0;
                     for (size_t j = 0; j < backprop_layer_output[l_size].size(); ++j) {
@@ -330,30 +334,71 @@ private:
 //    }
 //
 
-    void correct_weights(std::vector<std::vector<std::vector<F>>>& gradients,
-                         std::vector<std::vector<std::vector<F>>>& momentum,
-                         std::vector<std::vector<F>>& bias,
-                         std::vector<std::vector<F>>& bias_moment){
-        for (int i = 0; i < gradients.size(); ++i) {
-            for (int j = 0; j < gradients[i].size(); ++j) {
-                for (int k = 0; k < gradients[i][j].size(); ++k) {
-//                    momentum[i][j][k] = -learning_rate * ((1- momentum_influence) * gradients[i][j][k]
-//                              + momentum_influence * momentum[i][j][k]);
-                    momentum[i][j][k] = -learning_rate * gradients[i][j][k] + momentum_influence * momentum[i][j][k];
-//                    momentum[i][j][k] = -learning_rate * gradients[i][j][k];
+    void correct_weights(size_t iterations){
+        for (int i = 0; i < all_gradients.size(); ++i) {
+            for (int j = 0; j < all_gradients[i].size(); ++j) {
+                for (int k = 0; k < all_gradients[i][j].size(); ++k) {
+//                    moments[i][j][k] = -learning_rate * ((1- moments_influence) * all_gradients[i][j][k]
+//                              + moments_influence * moments[i][j][k]);
+                    momentums[i][j][k] = -learning_rate * all_gradients[i][j][k] + momentum_influence * momentums[i][j][k];
+//                    moments[i][j][k] = -learning_rate * all_gradients[i][j][k];
                 }
             }
 
 
 
-            //TODO momentum na biases
-            for (int j = 0; j < bias[i].size(); ++j) {
-//                bias_moment[i][j] = -learning_rate * ((1- momentum_influence)  * bias[i][j]
-//                        + momentum_influence * bias_moment[i][j]);
-                bias_moment[i][j] = -learning_rate * bias[i][j] + momentum_influence * bias_moment[i][j];
+            //TODO moments na biases
+            for (int j = 0; j < bias_gradients[i].size(); ++j) {
+//                bias_moment[i][j] = -learning_rate * ((1- moments_influence)  * bias[i][j]
+//                        + moments_influence * bias_moment[i][j]);
+                bias_moments[i][j] = -learning_rate * bias_gradients[i][j] + momentum_influence * bias_moments[i][j];
             }
-            layers[i].correct_weights(momentum[i], bias_moment[i]);
+            layers[i].correct_weights(momentums[i], bias_moments[i]);
         }
+
+
+//        float beta1 = 0.9,
+//                        beta2 = 0.999,
+//                        smol_pp = 0.00000001;
+//        float alpha = 0.001;
+//
+//
+//
+//        for (int i = 0; i < all_gradients.size(); ++i) {
+//            for (int j = 0; j < all_gradients[i].size(); ++j) {
+//                for (int k = 0; k < all_gradients[i][j].size(); ++k) {
+//                    momentums[i][j][k] = beta1 * momentums[i][j][k] + (1.0f - beta1) * all_gradients[i][j][k];
+//                    momentums[i][j][k] /= 1.0f - std::pow(beta1, iterations);
+//
+//                    raw_momentum[i][j][k] = beta2 * raw_momentum[i][j][k] + (1.0f - beta2) * all_gradients[i][j][k] * all_gradients[i][j][k];
+//                    raw_momentum[i][j][k] /= 1.0f - std::pow(beta2, iterations);
+//                }
+//            }
+//        }
+//
+//        for (int i = 0; i < all_gradients.size(); ++i) {
+//            for (int j = 0; j < bias_gradients[i].size(); ++j) {
+//                bias_moments[i][j] = beta1 * bias_moments[i][j] + (1.0f - beta1) * bias_gradients[i][j];
+//                bias_moments[i][j] /= 1.0f - std::pow(beta1, iterations);
+//
+//                bias_raw_moments[i][j] = beta2 * bias_raw_moments[i][j] + (1.0f - beta2) * bias_gradients[i][j] * bias_gradients[i][j];
+//                bias_raw_moments[i][j] /= 1.0f - std::pow(beta2, iterations);
+//            }
+//        }
+//
+//
+//
+//        // update
+//        for (int i = 0; i < all_gradients.size(); ++i) {
+//            for (int j = 0; j < all_gradients[i].size(); ++j) {
+//                for (int k = 0; k < all_gradients[i][j].size(); ++k) {
+//                    all_gradients[i][j][k] -= alpha * momentums[i][j][k] / (std::sqrt(raw_momentum[i][j][k]) + smol_pp);
+//                    bias_gradients[i][j] -= alpha * bias_moments[i][j] / (std::sqrt(bias_raw_moments[i][j]) + smol_pp);
+//                }
+//            }
+//
+//            layers[i].correct_weights(all_gradients[i], bias_gradients[i]);
+//        }
 
     }
 
@@ -388,7 +433,11 @@ private:
     //std::vector<std::vector<F>> output;
     std::vector<std::vector<F>> bias_gradients;
     std::vector<std::vector<F>> bias_moments;
+    std::vector<std::vector<F>> bias_raw_moments;
+
     std::vector<std::vector<std::vector<F>>> momentums;
+    std::vector<std::vector<std::vector<F>>> raw_momentum;
+
     std::vector<std::vector<std::vector<F>>> all_gradients;
     std::vector<F> forward_prop_batch;
 

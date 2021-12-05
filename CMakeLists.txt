@@ -4,6 +4,9 @@ project(pv021_project)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 
+set(CMAKE_CXX_FLAGS "-w -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize -std=c++17")
+
+
 include_directories(src)
 
 add_executable(pv021_project

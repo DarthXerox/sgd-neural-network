@@ -41,11 +41,27 @@ int main() {
                                                               {64,10},
                                                               {FunctionType::Relu, FunctionType::Softmax});
 
-
+//    std::vector<std::vector<float>> weights
+//            {{ 1,1,1,1 },
+//             { 2,2,2,2},
+//             { 3,3,3,3},
+//             { 4,4,4,4},
+//             { 5,5,5,5},
+//             { 6,6,6,6},
+//             { 7,7,7,7},
+//             { 8,8,8,8}};
+//
+//    std::vector<std::vector<float>> weights_2
+//            {{ 1,1 },
+//             { 2,2},
+//             { 3,3},
+//             { 4,4}};
+//
+//    neuralNetwork.set_weights({weights, weights_2});
 //    neuralNetwork.start_testing(TEST_VECTORS, TRAIN_PREDICTIONS);
     neuralNetwork.train();
 
-    neuralNetwork.start_testing(TEST_VECTORS, TRAIN_PREDICTIONS_2);
+    neuralNetwork.start_testing(TEST_VECTORS, "../actualPredictions6");
 
 
     clock_t stop = clock();

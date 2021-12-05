@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 # -Ofast
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 

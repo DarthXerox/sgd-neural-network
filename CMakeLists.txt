@@ -8,7 +8,7 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 # debug:
 
 
@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 
 # -Ofast
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -ffp-contract=fast -funsafe-math-optimizations -march=native -msse2 -mfpmath=sse -ftree-vectorize"  )
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
 
 

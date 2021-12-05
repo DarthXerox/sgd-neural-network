@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <cmath>
-
+#include <cassert>
 enum struct FunctionType {
     Relu,
     Softmax
@@ -22,15 +22,31 @@ struct ActivationFunction {
                 return x;
                 break;
             case FunctionType::Softmax: {
-                F exp_sum = F(0);
-                for (size_t i = 0; i < x.size(); ++i) {
-                    exp_sum += std::exp(x[i]);
+//                F exp_sum = F(0);
+//                for (size_t i = 0; i < x.size(); ++i) {
+//                    exp_sum += std::exp(x[i]);
+//                }
+//
+//                for (size_t i = 0; i < x.size(); ++i) {
+//                    x[i] = std::exp(x[i]) / exp_sum;
+//                }
+//
+//                return x;
+
+                float max = x[0];
+                for (size_t a = 1; a < x.size(); a++) {
+                   if (x[a] > max) {
+                       max = x[a];
+                   }
+                }
+                float sum = 0;
+                for (size_t a = 0; a < x.size(); a++) {
+                   sum += std::exp(x[a] - max);
                 }
 
-                for (size_t i = 0; i < x.size(); ++i) {
-                    x[i] = std::exp(x[i]) / exp_sum;
+                for (size_t a = 0; a < x.size(); a++) {
+                   x[a] = std::exp(x[a] - max) / (std::max(sum, 10e-6f));
                 }
-
                 return x;
                 //break;
             }

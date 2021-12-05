@@ -82,7 +82,7 @@ struct InputManager {
         std::default_random_engine rng(rd());
         std::shuffle(std::begin(cards_), std::end(cards_), rng);*/
 
-        srand(_SEED); // TODO this should be seeded from one point
+        //srand(_SEED); // TODO this should be seeded from one point
         std::random_shuffle(training_data.begin(), training_data.begin() + to);
     }
 

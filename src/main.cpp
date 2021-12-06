@@ -30,13 +30,9 @@ int main() {
 
     auto input = InputManager<float>(TRAIN_VECTORS);
 
-//    auto images = input.get_images();
-//    size_t images_count = images.size();
-//    float mean = input.get_mean();
-//    float d = input.get_standard_deviation();
-//    std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
 
-
+    // Adam works best, it only needs 6 epochs for 88.78, momemtum only gets to 88.0 after 8 epochs
+    // RMSProp got only up to 87%
     auto neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 16,
                                                               {128,10},
                                                               {FunctionType::Relu, FunctionType::Softmax},

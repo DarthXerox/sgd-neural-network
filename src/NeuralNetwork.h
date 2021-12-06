@@ -60,21 +60,18 @@ struct NeuralNetwork {
         size_t training_data_size = input_manager.get_images().size() * 0.9;
         size_t validation_data_size = input_manager.get_images().size() * 0.1;
 
-        while (epochs != 6) {
+        int max_epochs = optimizer == Optimizer::Adam ? 6 : 8;
+
+
+        while (epochs != max_epochs) {
             std::cout << "Epoch number: " << epochs << std::endl;
             for (size_t i = 0; i < training_data_size; i += batch_size) {
-                learning_rate = base_learning_rate / F(F(1) + (F(epochs) * F(training_data_size) + F(i)) / F(training_data_size));
+                if (optimizer == Optimizer::MomentumOnly)
+                    learning_rate = base_learning_rate / F(F(1) + (F(epochs) * F(training_data_size) + F(i)) / F(training_data_size));
 
-                if(i % 10000 < 1){
-                    std::cout << "Processed: " << i;// << std::endl;
-                    std::cout << " learning rate: " << learning_rate << std::endl;
-                }
 
-                // prepare 16 matrices
                 auto backward_prop_backup = std::vector<std::vector<F>>(),
                         forward_prop_backup = std::vector<std::vector<F>>();
-
-
                 for (unsigned long &layer_size : layer_sizes) {
                     backward_prop_backup.push_back(std::vector<F>(layer_size));
                     forward_prop_backup.push_back(std::vector<F>(layer_size));

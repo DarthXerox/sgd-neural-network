@@ -36,9 +36,7 @@ add_executable(pv021_project
         src/WeightLayer.h)
 
 add_executable(tests
-        src/test.cpp
         src/ActivationFunction.h
-        src/catch.hpp
         src/InputManager.h
         src/NeuralNetwork.h
         src/WeightLayer.h)

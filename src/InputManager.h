@@ -24,7 +24,6 @@ struct Image {
 
 private:
     std::vector<F> pixels;
-    //F value_predicted;
     F label; // label
 };
 
@@ -60,13 +59,6 @@ struct InputManager {
         return training_data;
     }
 
-    F get_mean() const {
-        return mean;
-    }
-
-    F get_standard_deviation() const {
-        return standard_deviation;
-    }
 
     size_t get_training_input_count() const {
         return training_data.size();
@@ -77,12 +69,6 @@ struct InputManager {
     }
 
     void shuffle_data(size_t to) {
-
-        /*std::random_device rd();
-        std::default_random_engine rng(rd());
-        std::shuffle(std::begin(cards_), std::end(cards_), rng);*/
-
-        //srand(_SEED); // TODO this should be seeded from one point
         std::random_shuffle(training_data.begin(), training_data.begin() + to);
     }
 
@@ -101,19 +87,6 @@ private:
             while (str >> colon);
             training_data.push_back(image);
         }
-        /*
-        while (!images.eof()) {
-            Image<F> image;
-            F val;
-            char colon;
-            do { // read the whole image line
-                images >> val >> colon;
-                image.pixels.push_back(val);
-            }
-            while (colon == ',');
-            training_data.push_back(image);
-        }
-         */
     }
 
     void preprocess_input() {
@@ -146,25 +119,10 @@ private:
         standard_deviation = std::sqrt(standard_deviation);
     }
 
-    //std::ifstream training_data_strm;
-    //std::ifstream labels_strm;
-    //std::vector<std::vector<F>> training_data;
     std::vector<Image<F>> training_data;
     F mean = F(0);
     F standard_deviation = F(0);
-    const int _SEED = 42;
-    //const size_t batch_size;
-    //ImageInputIterator<F> image_input_iterator;
 };
-
-//template<typename T, template<typename> class Iterator>
-//Iterator<T> get_first_input(const std::string& filename, size_t batch_size);
-//
-//template<typename F = float>
-//ImageInputIterator<F> get_first_training_input(const std::string& filename, size_t batch_size);
-//
-//template<typename F = float>
-//TestInputIterator<F> get_first_test_input(const std::string& filename, size_t batch_size);
 
 
 #endif //PV021_PROJECT_INPUTREADER_H

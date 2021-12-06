@@ -121,14 +121,10 @@ struct NeuralNetwork {
             momentums.clear();
             raw_momentum.clear();
             bias_raw_moments.clear();
-            //all_gradients.clear();
-            //bias_gradients.clear();
             bias_moments.clear();
             for (int j = 0; j < layer_sizes.size() - 1; ++j) {
                 momentums.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
                 raw_momentum.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
-                //all_gradients.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
-                //bias_gradients.push_back(std::vector<F>(layer_sizes[j+1], 0));
                 bias_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
                 bias_raw_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
             }
@@ -157,7 +153,6 @@ struct NeuralNetwork {
         test_predictions.close();
     }
 
-    // som upravil
     size_t vector_max(std::vector<F>& layer){
         F max_value = 0;
         int index = 0;
@@ -232,17 +227,6 @@ private:
      *      forward_prop_backup[i].size() == layer_sizes[i]
      */
     void forward_propagation(const Image<F>& input, std::vector<std::vector<F>>& forward_prop_backup)  {
-        if (forward_prop_backup.size() != layer_sizes.size()) {
-            throw std::runtime_error(std::string("Forward prop incorrect output vector size: "
-            + std::to_string(forward_prop_backup.size()) + " and should be: " + std::to_string(layer_sizes.size())));
-        }
-        for (size_t i = 0; i < forward_prop_backup.size(); ++i) {
-            if (forward_prop_backup[i].size() != layer_sizes[i]) {
-                throw std::runtime_error(std::string("Forward prop incorrect layer size! Layer num: "+ std::to_string(i) +
-                " size was: " + std::to_string(forward_prop_backup[i].size()) + " and should be: " + std::to_string(layer_sizes[i])));
-            }
-        }
-        //#pragma omp parallel for num_threads(NUM_THREADS) // TODO this may fail
         forward_prop_backup[0] = input.get_pixels();
         for (size_t i = 0; i < layers.size(); ++i) {
             layers[i].compute_inner_potential(forward_prop_backup[i], forward_prop_backup[i + 1]);
@@ -263,44 +247,27 @@ private:
      */
     void back_propagation(size_t label, const  std::vector<std::vector<F>>& forward_prop_backup,
                           std::vector<std::vector<F>>& backprop_layer_output) {
-        if (backprop_layer_output.size() != layer_sizes.size()) {
-            throw std::runtime_error(std::string("Backward prop incorrect output vector size: "
-            + std::to_string(backprop_layer_output.size())+ " and should be: " + std::to_string(layer_sizes.size())));
-        }
-        for (size_t i = 1; i < backprop_layer_output.size(); ++i) {
-            if (backprop_layer_output[i].size() != layer_sizes[i]) {
-                throw std::runtime_error(std::string("Backward prop incorrect layer size! Layer num: "+ std::to_string(i) +
-                " size was: " + std::to_string(backprop_layer_output[i].size()) + " and should be: " + std::to_string(layer_sizes[i])));
-            }
-        }
 
         for (size_t l_size = layers.size(); l_size > 1; l_size--){
             if (l_size == layers.size()){ // the top layer is always softmax
                 backprop_layer_output[l_size] = std::vector<F>(forward_prop_backup[l_size]);
                 backprop_layer_output[l_size][label] -= 1;
-                if (std::isnan(backprop_layer_output[l_size][label])) {
-                  throw std::runtime_error("aaaach");
-                }
                 for (size_t i = 0; i < forward_prop_backup[l_size - 1].size(); i++){
                     F out_sum = 0;
                     for (size_t j = 0; j < backprop_layer_output[l_size].size(); ++j) {
                         out_sum += backprop_layer_output[l_size][j] * layers[l_size - 1].get_weight(i,j);
                     }
                     backprop_layer_output[l_size - 1][i] = out_sum;
-                    if (std::isnan(backprop_layer_output[l_size - 1][i])) {
-                      throw std::runtime_error("aaaach");
-                    }
                 }
             }
         }
 
     }
 
-// TODO should we keep old momentum?????
     void perform_rmsprop_weight_correction() {
         F p = 0.9,
-                n = 0.001,
-                smol_pp = 0.00001;
+        n = 0.001,
+        smol_pp = 0.00001;
 
         // gradients
         for (int i = 0; i < all_gradients.size(); ++i) {
@@ -342,10 +309,10 @@ private:
 
     void perform_papo_weight_correction(size_t iterations) {
         F beta1 = 0.9,
-            beta2 = 0.999,
-            smol_pp = 0.000001,
-            beta1_pow = std::pow(beta1, F(iterations)),
-            beta2_pow = std::pow(beta2, F(iterations));
+        beta2 = 0.999,
+        smol_pp = 0.000001,
+        beta1_pow = std::pow(beta1, F(iterations)),
+        beta2_pow = std::pow(beta2, F(iterations));
         F alpha = 0.001;
 
         for (int i = 0; i < all_gradients.size(); ++i) {
@@ -392,10 +359,6 @@ private:
                     momentums[i][j][k] = -learning_rate * all_gradients[i][j][k] + momentum_influence * momentums[i][j][k];
                 }
             }
-
-
-
-            //TODO moments na biases
             for (int j = 0; j < bias_gradients[i].size(); ++j) {
                 bias_moments[i][j] = -learning_rate * bias_gradients[i][j] + momentum_influence * bias_moments[i][j];
             }
@@ -404,22 +367,11 @@ private:
     }
 
 
-
-    std::vector<F>& sum_two_vectors(std::vector<F>& fst, const std::vector<F>& snd) {
-        if (fst.size() != snd.size()) {
-            throw std::runtime_error("Wrong vector sizes in their sum");
-        }
-        for (size_t i = 0; i < fst.size(); ++i) {
-            fst[i] += snd[i];
-        }
-        return fst;
-    }
-
     InputManager<F> input_manager;
     const size_t batch_size;
-    float momentum_influence = 0.55; // TODO MOMENTUM_INFLUENCE 0.3
-                    float base_learning_rate = 0.03;
-                    float learning_rate = 0.03;
+    float momentum_influence = 0.55;
+    float base_learning_rate = 0.03;
+    float learning_rate = 0.03;
     std::vector<size_t> layer_sizes;
     std::vector<FunctionType> activation_functions;
     std::vector<WeightLayer<F>> layers;

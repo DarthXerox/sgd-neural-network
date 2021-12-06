@@ -9,6 +9,7 @@ if (OPENMP_FOUND)
 endif()
 
 set(CMAKE_CXX_STANDARD 17)
+#set(ENV{MALLOC_CHECK_} 2)
 # debug:
 
 

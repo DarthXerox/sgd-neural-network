@@ -149,11 +149,13 @@
 #include <exception>
 #include <stdexcept>
 
-std::mt19937 mt(time(NULL));
+//std::mt19937 mt(time(NULL));
+std::mt19937 mt(42);
+
 
 template<typename F = float>
 struct WeightLayer {
-   WeightLayer(float weight_range, int lower_size, int upper_size) {
+   WeightLayer(F weight_range, int lower_size, int upper_size) {
        weights = std::vector<std::vector<F>>(lower_size);
        biases = std::vector<F>(upper_size);
 //        srand(SEED);
@@ -198,10 +200,16 @@ struct WeightLayer {
                    throw std::runtime_error("aaaach");
                }
                weights[i][j] += errors[i][j];
+               if (std::isnan(weights[i][j])) {
+                                  throw std::runtime_error("aaaach");
+                              }
            }
        }
        for (int i = 0; i < bias_error.size(); ++i) {
            biases[i] += bias_error[i];
+           if (std::isnan(biases[i])) {
+                                             throw std::runtime_error("aaaach");
+                                         }
        }
 
        transpose_weights();
@@ -217,7 +225,7 @@ struct WeightLayer {
 //#pragma omp for collapse(2)
        for (size_t i = 0; i < weights.size(); ++i) {
            for (size_t j = 0; j < weights.front().size(); ++j) {
-               transposed_weights[j][i] = weights[i][j];
+               transposed_weights.at(j).at(i) = weights.at(i).at(j);
            }
        }
    }

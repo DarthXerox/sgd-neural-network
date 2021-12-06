@@ -23,7 +23,7 @@
 int main() {
     std::cout << "Lol, done!" << std::endl;
 
-88%
+
 
     clock_t start = clock();
 
@@ -37,9 +37,11 @@ int main() {
 //    std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
 
 
-    NeuralNetwork<float> neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 1,
-                                                              {128,10},
+    auto neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 1,
+                                                              {64,10},
                                                               {FunctionType::Relu, FunctionType::Softmax});
+    // float 128 8 epoch SGD + momentum -> 88.3
+    // float 64 8 epoch SGD + momentum -> 87.98
 
 
 //    neuralNetwork.start_testing(TEST_VECTORS, TRAIN_PREDICTIONS);

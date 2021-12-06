@@ -59,7 +59,7 @@ struct ActivationFunction {
                 return x <= F(0) ? F(0) : F(1);
             }
             case FunctionType::Softmax: {
-                return x;
+                throw std::runtime_error("We don't derive softmax");
             }
 
         }

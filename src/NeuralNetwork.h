@@ -91,8 +91,8 @@ struct NeuralNetwork {
                 }
                 //backward_prop_backup.front().clear();
 
-                if (i == 30272) {
-                   // std::cout << "here we go?" << std::endl;
+                if (i == 102) {
+                   std::cout << "here we go?" << std::endl;
                 }
                 for (size_t j = 0; j < batch_size; j++) {
                     if (j == 1) {
@@ -128,7 +128,9 @@ struct NeuralNetwork {
                 // change learning rate
 
                 determine_gradients(forward_batch_average, backward_batch_average);
-                correct_weights(i + batch_size);
+                //correct_weights(i + batch_size);
+                perform_rmsprop_weight_correction();
+                //perform_momentum_weight_correction();
             }
 
             ++epochs;
@@ -141,6 +143,8 @@ struct NeuralNetwork {
             input_manager.shuffle_data(training_data_size);
 
             momentums.clear();
+            raw_momentum.clear();
+            bias_raw_moments.clear();
             all_gradients.clear();
             bias_gradients.clear();
             bias_moments.clear();
@@ -213,9 +217,9 @@ struct NeuralNetwork {
                         }
                    }
                }
-               /*for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
+               for (int j = 0; j < bias_gradients[layer_index].size(); ++j) {
                    bias_gradients[layer_index][j] = backward_batch_average[layer_index + 1][j];
-               }*/
+               }
            }
            else{
                for (size_t j = 0; j < layers[layer_index].get_lower_layer_len(); ++j) {
@@ -285,14 +289,14 @@ struct NeuralNetwork {
             //correct = index == input_manager.get_images()[i].get_label() ? correct + 1 : correct;
             correct += size_t(index == input_manager.get_images()[i].get_label());
 
-//            if ((damn % 100) < 10) {
-//
-//            for (auto el : forward_prop_backup.back()) {
-//                std::cout << el << " ";
-//            }
-//            std::cout << "Correct: " << correct << " now predicted: " << index << "should be: "
-//                        << input_manager.get_images()[i].get_label() << std::endl;
-//            }
+            if ((damn % 100) < 10) {
+
+            for (auto el : forward_prop_backup.back()) {
+                std::cout << el << " ";
+            }
+            std::cout << "Correct: " << correct << " now predicted: " << index << "should be: "
+                        << input_manager.get_images()[i].get_label() << std::endl;
+            }
 
             damn++;
 
@@ -411,8 +415,122 @@ private:
 //        return forward_prop_backup[forward_prop_backup.size() - 1];
 //    }
 //
+// TODO should we keep old momentum?????
+    void perform_rmsprop_weight_correction() {
+        F p = 0.9,
+                n = 0.001,
+                smol_pp = 0.00000001;
 
-    void correct_weights(size_t iterations){
+        // gradients
+        for (int i = 0; i < all_gradients.size(); ++i) {
+            for (int j = 0; j < all_gradients.at(i).size(); ++j) {
+                for (int k = 0; k < all_gradients.at(i).at(j).size(); ++k) {
+                    raw_momentum.at(i).at(j).at(k) = p * raw_momentum.at(i).at(j).at(k)
+                            + (1 - p) * all_gradients.at(i).at(j).at(k) * all_gradients.at(i).at(j).at(k);
+                }
+            }
+        }
+
+        for (int i = 0; i < all_gradients.size(); ++i) {
+            for (int j = 0; j < all_gradients.at(i).size(); ++j) {
+                for (int k = 0; k < all_gradients.at(i).at(j).size(); ++k) {
+                    all_gradients.at(i).at(j).at(k) = (-n / std::sqrt(raw_momentum.at(i).at(j).at(k) + smol_pp))
+                             * all_gradients.at(i).at(j).at(k);
+                }
+            }
+        }
+
+        // bias gradients
+        for (int i = 0; i < bias_gradients.size(); ++i) {
+           for (int j = 0; j < bias_gradients.at(i).size(); ++j) {
+               bias_raw_moments.at(i).at(j) = p * bias_raw_moments.at(i).at(j)
+                       + (1 - p) * bias_gradients.at(i).at(j) * bias_gradients.at(i).at(j);
+           }
+        }
+
+        for (int i = 0; i < bias_gradients.size(); ++i) {
+           for (int j = 0; j < bias_gradients.at(i).size(); ++j) {
+               bias_gradients.at(i).at(j) = (-n / std::sqrt(bias_raw_moments.at(i).at(j) + smol_pp))
+                       * bias_gradients.at(i).at(j);
+           }
+
+           // update
+           layers.at(i).correct_weights(all_gradients.at(i), bias_gradients.at(i));
+        }
+    }
+
+    void perform_adam_weight_correction(size_t iterations) {
+        F beta1 = 0.9,
+            beta2 = 0.999,
+            smol_pp = 0.00000001,
+            beta1_pow = std::pow(beta1, F(iterations)),
+            beta2_pow = std::pow(beta2, F(iterations));
+        F alpha = 0.001;
+
+
+
+                for (int i = 0; i < all_gradients.size(); ++i) {
+                    for (int j = 0; j < all_gradients.at(i).size(); ++j) {
+                        for (int k = 0; k < all_gradients.at(i).at(j).size(); ++k) {
+                            momentums.at(i).at(j).at(k) = beta1 * momentums.at(i).at(j).at(k) + (1.0f - beta1) * all_gradients.at(i).at(j).at(k);
+                            momentums.at(i).at(j).at(k) /= 1.0f - beta1_pow;
+
+                            raw_momentum.at(i).at(j).at(k) = beta2 * raw_momentum.at(i).at(j).at(k) + (1.0f - beta2) * all_gradients.at(i).at(j).at(k) * all_gradients.at(i).at(j).at(k);
+                            raw_momentum.at(i).at(j).at(k) /= 1.0f - beta2_pow;
+                        }
+                    }
+                }
+                //std::cout << "Gradients OK" << std::endl;
+
+
+                for (int i = 0; i < bias_gradients.size(); ++i) {
+                    for (int j = 0; j < bias_gradients.at(i).size(); ++j) {
+                        bias_moments.at(i).at(j) = beta1 * bias_moments.at(i).at(j) + (1.0f - beta1) * bias_gradients.at(i).at(j);
+                        bias_moments.at(i).at(j) /= 1.0f - beta1_pow;
+
+                        bias_raw_moments.at(i).at(j) = beta2 * bias_raw_moments.at(i).at(j) + (1.0f - beta2) * bias_gradients.at(i).at(j) * bias_gradients.at(i).at(j);
+                        bias_raw_moments.at(i).at(j) /= 1.0f - beta2_pow;
+                    }
+                }
+
+                //std::cout << "Bias OK" << std::endl;
+
+
+
+                /*std::vector<std::vector<std::vector<F>>> gradients_temp;
+                std::vector<std::vector<F>> bias_gradients_temp;
+                for (int j = 0; j < layer_sizes.size() - 1; ++j) {
+                    gradients_temp.push_back(std::vector<std::vector<F>>(layer_sizes.at(j), std::vector<F>(layer_sizes.at(j + 1), 0)));
+                    bias_gradients_temp.push_back(std::vector<F>(layer_sizes.at(j+1), 0));
+                }*/
+
+                // update
+                for (int i = 0; i < all_gradients.size(); ++i) {
+                    for (int j = 0; j < all_gradients.at(i).size(); ++j) {
+                        for (int k = 0; k < all_gradients.at(i).at(j).size(); ++k) {
+                            all_gradients.at(i).at(j).at(k) = -alpha * momentums.at(i).at(j).at(k) / (std::sqrt(raw_momentum.at(i).at(j).at(k)) + smol_pp);
+                        }
+                    }
+
+                }
+
+                for (int i = 0; i < bias_gradients.size(); ++i) {
+                   for (int j = 0; j < bias_gradients.at(i).size(); ++j) {
+                       bias_gradients.at(i).at(j) = -alpha * bias_moments.at(i).at(j) / (std::sqrt(bias_raw_moments.at(i).at(j)) + smol_pp);
+                   }
+
+                    //std::cout << "Performing update " << i << " OK" << std::endl;
+
+                    layers.at(i).correct_weights(all_gradients.at(i), bias_gradients.at(i));
+                    //std::cout << "Update " << i << " OK" << std::endl;
+                }
+
+
+
+                //std::cout << "Whole adam OK" << std::endl;
+    }
+
+    void perform_momentum_weight_correction(){
         for (int i = 0; i < all_gradients.size(); ++i) {
             for (int j = 0; j < all_gradients[i].size(); ++j) {
                 for (int k = 0; k < all_gradients[i][j].size(); ++k) {
@@ -433,51 +551,6 @@ private:
             }
             layers[i].correct_weights(momentums[i], bias_moments[i]);
         }
-
-
-//        float beta1 = 0.9,
-//                        beta2 = 0.999,
-//                        smol_pp = 0.00000001;
-//        float alpha = 0.001;
-//
-//
-//
-//        for (int i = 0; i < all_gradients.size(); ++i) {
-//            for (int j = 0; j < all_gradients[i].size(); ++j) {
-//                for (int k = 0; k < all_gradients[i][j].size(); ++k) {
-//                    momentums[i][j][k] = beta1 * momentums[i][j][k] + (1.0f - beta1) * all_gradients[i][j][k];
-//                    momentums[i][j][k] /= 1.0f - std::pow(beta1, iterations);
-//
-//                    raw_momentum[i][j][k] = beta2 * raw_momentum[i][j][k] + (1.0f - beta2) * all_gradients[i][j][k] * all_gradients[i][j][k];
-//                    raw_momentum[i][j][k] /= 1.0f - std::pow(beta2, iterations);
-//                }
-//            }
-//        }
-//
-//        for (int i = 0; i < all_gradients.size(); ++i) {
-//            for (int j = 0; j < bias_gradients[i].size(); ++j) {
-//                bias_moments[i][j] = beta1 * bias_moments[i][j] + (1.0f - beta1) * bias_gradients[i][j];
-//                bias_moments[i][j] /= 1.0f - std::pow(beta1, iterations);
-//
-//                bias_raw_moments[i][j] = beta2 * bias_raw_moments[i][j] + (1.0f - beta2) * bias_gradients[i][j] * bias_gradients[i][j];
-//                bias_raw_moments[i][j] /= 1.0f - std::pow(beta2, iterations);
-//            }
-//        }
-//
-//
-//
-//        // update
-//        for (int i = 0; i < all_gradients.size(); ++i) {
-//            for (int j = 0; j < all_gradients[i].size(); ++j) {
-//                for (int k = 0; k < all_gradients[i][j].size(); ++k) {
-//                    all_gradients[i][j][k] -= alpha * momentums[i][j][k] / (std::sqrt(raw_momentum[i][j][k]) + smol_pp);
-//                    bias_gradients[i][j] -= alpha * bias_moments[i][j] / (std::sqrt(bias_raw_moments[i][j]) + smol_pp);
-//                }
-//            }
-//
-//            layers[i].correct_weights(all_gradients[i], bias_gradients[i]);
-//        }
-
     }
 
 

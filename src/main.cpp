@@ -39,7 +39,8 @@ int main() {
 
     auto neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 16,
                                                               {128,10},
-                                                              {FunctionType::Relu, FunctionType::Softmax});
+                                                              {FunctionType::Relu, FunctionType::Softmax},
+                                                              Optimizer::Adam);
     // float 128 8 epoch SGD + momentum -> 88.3
     // float 64 8 epoch SGD + momentum -> 87.98
 

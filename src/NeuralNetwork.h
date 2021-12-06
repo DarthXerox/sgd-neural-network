@@ -122,20 +122,20 @@ struct NeuralNetwork {
 
             input_manager.shuffle_data(training_data_size);
 
-//            momentums.clear();
-//            raw_momentum.clear();
-//            bias_raw_moments.clear();
-//            all_gradients.clear();
-//            bias_gradients.clear();
-//            bias_moments.clear();
-//            for (int j = 0; j < layer_sizes.size() - 1; ++j) {
-//                momentums.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
-//                raw_momentum.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
-//                all_gradients.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
-//                bias_gradients.push_back(std::vector<F>(layer_sizes[j+1], 0));
-//                bias_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
-//                bias_raw_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
-//            }
+            momentums.clear();
+            raw_momentum.clear();
+            bias_raw_moments.clear();
+            all_gradients.clear();
+            bias_gradients.clear();
+            bias_moments.clear();
+            for (int j = 0; j < layer_sizes.size() - 1; ++j) {
+                momentums.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
+                raw_momentum.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
+                all_gradients.push_back(std::vector<std::vector<F>>(layer_sizes[j], std::vector<F>(layer_sizes[j+1], 0)));
+                bias_gradients.push_back(std::vector<F>(layer_sizes[j+1], 0));
+                bias_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
+                bias_raw_moments.push_back(std::vector<F>(layer_sizes[j+1], 0));
+            }
         }
     }
 

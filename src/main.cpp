@@ -37,8 +37,8 @@ int main() {
 //    std::cout << "count: " << images_count << " mean: " << mean << " deviation: " << d << std::endl;
 
 
-    auto neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 1,
-                                                              {64,10},
+    auto neuralNetwork = NeuralNetwork<float>(TRAIN_VECTORS, TRAIN_LABELS, 16,
+                                                              {128,10},
                                                               {FunctionType::Relu, FunctionType::Softmax});
     // float 128 8 epoch SGD + momentum -> 88.3
     // float 64 8 epoch SGD + momentum -> 87.98
